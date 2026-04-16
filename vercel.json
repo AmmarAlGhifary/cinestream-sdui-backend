@@ -3,6 +3,14 @@
     {
       "source": "/",
       "destination": "/api/index"
+    },
+    {
+      "source": "/home",
+      "destination": "/api/home"
+    },
+    {
+      "source": "/movie_detail_screen",
+      "destination": "/api/movie_detail_screen"
     }
   ]
 }
