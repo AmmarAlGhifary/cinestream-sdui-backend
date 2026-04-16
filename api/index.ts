@@ -6,6 +6,6 @@ export default function handler(req: VercelRequest, res: VercelResponse) {
     res.status(200).json({
         status: "ok",
         message: "SDUI Backend is running!",
-        endpoints: { home: "/api/render" }
+        endpoints: { home: "/api/home" }
     });
 }
