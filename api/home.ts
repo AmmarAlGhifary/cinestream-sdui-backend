@@ -7,33 +7,22 @@ const BASE_URL = "https://api.themoviedb.org/3";
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
     try {
-        logger.info('Fetching trending movies from TMDB');
-        const trendingResponse = await axios.get(`${BASE_URL}/trending/movie/day?api_key=${TMDB_API_KEY}`);
-        const movies = trendingResponse.data.results;
+        logger.info('Fetching movies from TMDB');
 
-        if (!movies || movies.length === 0) {
+        const trendingResponse = await axios.get(`${BASE_URL}/trending/movie/day?api_key=${TMDB_API_KEY}`);
+        const trendingMovies = trendingResponse.data.results;
+
+        const upcomingRespone = await axios.get(`${BASE_URL}/movie/upcoming?api_key=${TMDB_API_KEY}`);
+        const upcomingMovies = upcomingRespone.data.results;
+
+        if (!trendingMovies || trendingMovies.length === 0) {
             logger.warn('No movies found from TMDB response');
             return res.status(500).json({ error: "No movies found from TMDB" });
         }
 
-        const heroMovie = movies[0];
-
-        const carouselMovies = movies.slice(1, 11).map((movie: any) => ({
-            type: "movie_card",
-            movie_id: movie.id.toString(),
-            poster_url: `https://image.tmdb.org/t/p/w500${movie.poster_path}`,
-            title: {
-                type: "text",
-                text_content: movie.title || movie.name
-            },
-            action: {
-                type: "navigation_action",
-                destination: "movie_detail_screen",
-                params: {
-                    movie_id: movie.id.toString()
-                }
-            }
-        }));
+        const heroMovie = trendingMovies[0];
+        const trendingCarousel = trendingMovies.slice(1, 11).map(mapToMovieCard);
+        const upcomingCarousel = upcomingMovies.slice(0, 10).map(mapToMovieCard);
 
         const sduiResponse = {
             type: "screen",
@@ -47,7 +36,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                 actions: [
                     {
                         type: "icon_button",
-                        icon_name: "search"
+                        icon_name: "search",
+                        action: {
+                            type: "navigation_action",
+                            destination: "search_screen"
+                        }
                     }
                 ]
             },
@@ -88,15 +81,46 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                         },
                         action_button: {
                             type: "text_button",
-                            text: "See All"
+                            text: "See All",
+                            action: {
+                                type: "navigation_action",
+                                destination: "movie_list_screen",
+                                params: {
+                                    list_type: "trending"
+                                }
+                            }
                         }
                     },
                     {
                         type: "movie_carousel",
                         carousel_id: "trending_carousel",
                         item_type: "movie_card",
-                        items: carouselMovies
-                    }
+                        items: trendingCarousel
+                    },
+                    {
+                        type: "section_header",
+                        title: {
+                            type: "text",
+                            text_content: "Coming Soon"
+                        },
+                        action_button: {
+                            type: "text_button",
+                            text: "See All",
+                            action: {
+                                type: "navigation_action",
+                                destination: "movie_list_screen",
+                                params: {
+                                    list_type: "upcoming"
+                                }
+                            }
+                        }
+                    },
+                    {
+                        type: "movie_carousel",
+                        carousel_id: "upcoming_carousel",
+                        item_type: "movie_card",
+                        items: upcomingCarousel
+                    },
                 ]
             }
         };
@@ -107,5 +131,24 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     } catch (error: any) {
         logger.error("TMDB Fetch Error:", { message: error.message, stack: error.stack });
         res.status(500).json({ error: "Failed to generate SDUI blueprint" });
+    }
+
+    function mapToMovieCard(movie: any) {
+        return {
+            type: "movie_card",
+            movie_id: movie.id.toString(),
+            poster_url: `https://image.tmdb.org/t/p/w500${movie.poster_path}`,
+            title: {
+                type: "text",
+                text_content: movie.title || movie.name
+            },
+            action: {
+                type: "navigation_action",
+                destination: "movie_detail_screen",
+                params: {
+                    movie_id: movie.id.toString()
+                }
+            }
+        };
     }
 }
