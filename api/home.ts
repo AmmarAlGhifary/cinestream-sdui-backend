@@ -30,8 +30,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             toolbar: {
                 type: "app_bar",
                 title: {
-                    type: "text",
-                    text_content: "CineStream"
+                    type: "toolbar_title",
+                    text_content: "CineStream",
+                    alignment: "start",
+                    style: "headline"
                 },
                 actions: [
                     {
@@ -51,8 +53,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                         type: "featured_hero",
                         image_url: `https://image.tmdb.org/t/p/w780${heroMovie.backdrop_path}`,
                         title: {
-                            type: "text",
-                            text_content: heroMovie.title || heroMovie.name
+                            type: "section_header",
+                            title: {
+                                type: "text",
+                                text_content: heroMovie.title || heroMovie.name
+                            }
                         },
                         description: {
                             type: "text",

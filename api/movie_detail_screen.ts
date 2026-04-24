@@ -24,8 +24,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             toolbar: {
                 type: "app_bar",
                 title: {
-                    type: "text",
-                    text_content: movie.title || movie.name
+                    type: "toolbar_title",
+                    text_content: "CineStream",
+                    alignment: "start",
+                    style: "headline"
                 },
                 actions: []
             },
@@ -36,8 +38,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                         type: "featured_hero",
                         image_url: `https://image.tmdb.org/t/p/w780${movie.backdrop_path}`,
                         title: {
-                            type: "text",
-                            text_content: movie.tagline || movie.title
+                            type: "section_header",
+                            title: {
+                                type: "text",
+                                text_content: movie.tagline || movie.title
+                            }
                         },
                         description: {
                             type: "text",
