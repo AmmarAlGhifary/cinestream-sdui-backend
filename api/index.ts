@@ -9,7 +9,8 @@ export default function handler(req: VercelRequest, res: VercelResponse) {
         endpoints: {
             home: "/api/home",
             movie_detail_screen: "/api/movie_detail_screen",
-            movie_list_screen: "/api/movie_list_screen"
+            movie_list_screen: "/api/movie_list_screen",
+            search: "/api/search/"
         }
     });
 }

@@ -17,6 +17,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         } else if (listType === "upcoming") {
             tmdbUrl = `${BASE_URL}/movie/upcoming?api_key=${TMDB_API_KEY}`;
             pageTitle = "Upcoming Movies";
+        } else if (listType === "similar") {
+            tmdbUrl = `${BASE_URL}/movie/${req.query.movie_id}/similar?api_key=${TMDB_API_KEY}`;
+            pageTitle = "Similar Movies";
         } else {
             logger.warn(`Unknown list type: ${listType}`);
             return res.status(400).json({ error: "Invalid list type" });
@@ -43,7 +46,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             screen_id: "movie_list_screen",
             toolbar: {
                 type: "app_bar",
-                title: { type: "text", text_content: pageTitle },
+                title: {
+                    type: "toolbar_title",
+                    text_content: pageTitle,
+                    alignment: "start",
+                    style: "headline",
+                },
                 actions: []
             },
             body: {
