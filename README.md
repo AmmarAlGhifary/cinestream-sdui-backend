@@ -70,6 +70,10 @@ To test UI changes without waiting for Vercel deployments, you can run the serve
 3. Connect the Android Emulator:
    Update the Android app's network config to point to the local server (`http://10.0.2.2:3000/`). Make sure `android:usesCleartextTraffic="true"` is temporarily enabled in your AndroidManifest.xml.
 
+
+## Android Client
+This BFF server is built to be used with the Android client: [cinestream-sdui](https://github.com/AmmarAlGhifary/cinestream-sdui)
+
 ## Deploying
 
 Pushing to the `main` branch triggers a Vercel production build, or you can deploy manually:
