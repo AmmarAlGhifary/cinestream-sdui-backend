@@ -1,36 +1,77 @@
 # CineStream SDUI Backend
 
-This is the backend service (BFF) that powers the CineStream Android app, built to explore Server-Driven UI (SDUI) for my thesis. 
+[![Vercel Deployment](https://img.shields.io/badge/Vercel-Production-black?logo=vercel)](https://sdui-backend.vercel.app/)
+[![Node.js](https://img.shields.io/badge/Node.js-18+-green?logo=node.js)](https://nodejs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-blue?logo=typescript)](https://www.typescriptlang.org/)
+[![TMDB API](https://img.shields.io/badge/TMDB-API%20v3-01b4e4?logo=themoviedatabase)](https://developer.themoviedb.org/)
 
-Instead of hardcoding UI layouts, navigation, and content on the client side, this server fetches raw movie data from the TMDB API, processes it, and returns a JSON blueprint. The Android app simply reads this blueprint and draws whatever the server dictates.
+This repository is the Backend-for-Frontend (BFF) server powering the **CineStream** Android application, designed to explore **Server-Driven UI (SDUI)** principles.
 
-## Tech Stack
-- TypeScript & Node.js
-- Vercel Serverless Functions
-- TMDB API
-- Axios
+Instead of hardcoding UI hierarchy, styling, and navigation on the client, this server queries raw movie metadata from The Movie Database (TMDB) API, processes and maps it into dynamic JSON UI blueprints, and returns them to the client. The Android application acts as a declarative rendering engine via Jetpack Compose.
 
-## Endpoints
+---
 
-All serverless functions live in the `/api` directory and return a structured `SduiScreen` JSON object.
+## 🔗 Project Linktree & Ecosystem
 
-- `GET /api/home` - The main dashboard. Returns a daily trending hero banner and two horizontal carousels (Trending and Upcoming).
-- `GET /api/movie_detail_screen?movie_id={id}` - The detail view for a specific movie, including its overview and a carousel of similar movies.
-- `GET /api/movie_list_screen?list_type={type}&movie_id={id}` - A vertical list view for categories like "trending", "upcoming", or "similar" (which requires the `movie_id` param).
-- `GET /api/search?query={text}` - Queries TMDB for matching titles and returns a dynamic vertical list of search results.
+| Resource | Link / Reference | Description |
+| :--- | :--- | :--- |
+| **Android Client (SDUI)** | [AmmarAlGhifary/cinestream-sdui](https://github.com/AmmarAlGhifary/cinestream-sdui) | Native Android client with Jetpack Compose SDUI engine |
+| **Backend BFF (This Repo)** | [AmmarAlGhifary/cinestream-sdui-backend](https://github.com/AmmarAlGhifary/cinestream-sdui-backend) | Serverless BFF generating SDUI blueprints |
+| **Live Production API** | [https://sdui-backend.vercel.app/](https://sdui-backend.vercel.app/) | Deployed production instance on Vercel |
+| **Local Emulator Endpoint** | `http://10.0.2.2:3000/` | Android emulator loopback to local Vercel dev server |
+| **TMDB API Documentation** | [TMDB API v3 Docs](https://developer.themoviedb.org/reference/intro/getting-started) | External data source for movies, posters, and credits |
+| **Android Project Structure** | [PROJECT_STRUCTURE.md](https://github.com/AmmarAlGhifary/cinestream-sdui/blob/development/PROJECT_STRUCTURE.md) | Multi-module layout of the Android application |
 
-## The SDUI Blueprint
+---
 
-The server communicates with the Android client using a strict, polymorphic JSON structure. Every endpoint returns a `screen` object containing a `toolbar` and a `body`. 
+## 🏛️ System Architecture
 
-Example response:
+```mermaid
+flowchart LR
+    A["🎬 TMDB API<br/>(External Movie Data)"] -->|Raw REST JSON| B["⚡ CineStream BFF<br/>(sdui-backend on Vercel)"]
+    B -->|Polymorphic SDUI Blueprints| C["📱 CineStream Android<br/>(Jetpack Compose Engine)"]
+    
+    subgraph BFF Processing
+        B1["Fetch TMDB Endpoints"] --> B2["Map to Component Tree"]
+        B2 --> B3["Inject Dynamic Actions & IDs"]
+        B3 --> B4["Emit SduiScreen JSON"]
+    end
+    
+    B --- BFF Processing
+```
+
+---
+
+## 📡 Endpoints Specification
+
+All serverless functions live in `/api` and conform to polymorphic `SduiScreen` specifications:
+
+| Method | Endpoint | Rewrite Alias | Query Parameters | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `GET` | `/api/index` | `/` | None | Service health check and endpoint directory |
+| `GET` | `/api/home` | `/home` | None | Home dashboard: Hero banner + Trending and Upcoming carousels |
+| `GET` | `/api/movie_detail_screen` | `/movie_detail_screen` | `movie_id` (required) | Detailed movie screen with metadata, overview, and similar movies |
+| `GET` | `/api/movie_list_screen` | None | `list_type` (`trending` \| `upcoming` \| `similar`), `movie_id` (if similar) | Paginated / full vertical list view for categories |
+| `GET` | `/api/search` | None | `query` (required) | Search TMDB titles with vertical result listing |
+
+---
+
+## 🧩 SDUI Blueprint Contract
+
+Every endpoint returns a polymorphic `screen` object consisting of a `toolbar` and a `body`:
+
 ```json
 {
   "type": "screen",
   "screen_id": "movie_list_screen",
   "toolbar": {
     "type": "app_bar",
-    "title": { "type": "text", "text_content": "Trending Movies" },
+    "title": {
+      "type": "toolbar_title",
+      "text_content": "Trending Movies",
+      "alignment": "start",
+      "style": "headline"
+    },
     "actions": []
   },
   "body": {
@@ -54,29 +95,57 @@ Example response:
 }
 ```
 
-## Running Locally
+### Component Registry
 
-To test UI changes without waiting for Vercel deployments, you can run the server locally and connect the Android emulator directly to it.
+| Server Type (`type`) | Kotlin Client Model | Category |
+| :--- | :--- | :--- |
+| `screen` | `SduiScreen` | Root Screen Container |
+| `app_bar` | `SduiAppBar` | Toolbar Layout |
+| `toolbar_title` | `SduiToolbarTitle` | App Bar Typography |
+| `column` | `SduiColumn` | Vertical Layout Container |
+| `featured_hero` | `SduiFeaturedHero` | Hero Showcase Banner |
+| `featured_hero_detail` | `SduiFeaturedHeroDetail` | Detail Header Banner |
+| `section_header` | `SduiSectionHeader` | Section Title with Action |
+| `movie_carousel` | `SduiMovieCarousel` | Horizontal Scrollable Carousel |
+| `movie_card` | `SduiMovieCard` | Poster Card Item |
+| `vertical_list` | `SduiVerticalList` | Vertical Scrollable List |
+| `movie_list_item` | `SduiListItem` | Horizontal Row Movie Item |
+| `navigation_action` | `NavigationAction` | Client Navigation Trigger |
 
-1. Install dependencies:
+---
+
+## 💻 Local Development
+
+1. **Install Dependencies**:
    ```bash
    npm install
    ```
-2. Start the local Vercel dev server:
+
+2. **Run Local Dev Server**:
    ```bash
-   vercel dev
+   npm run dev
+   # Runs: vercel dev --local --token dummy
    ```
-   *(The server will start on http://localhost:3000)*
-3. Connect the Android Emulator:
-   Update the Android app's network config to point to the local server (`http://10.0.2.2:3000/`). Make sure `android:usesCleartextTraffic="true"` is temporarily enabled in your AndroidManifest.xml.
+   *The server starts on `http://localhost:3000`.*
 
+3. **Connect the Android Emulator**:
+   - Point your Android app's base URL in `gradle.properties` to:
+     ```properties
+     BASE_URL=http://10.0.2.2:3000/
+     ```
+   - Verify `android:usesCleartextTraffic="true"` in `AndroidManifest.xml` during local testing.
 
-## Android Client
-This BFF server is built to be used with the Android client: [cinestream-sdui](https://github.com/AmmarAlGhifary/cinestream-sdui)
+---
 
-## Deploying
+## 🚀 Deployment
 
-Pushing to the `main` branch triggers a Vercel production build, or you can deploy manually:
+Pushing to the `main` branch automatically deploys to Vercel production:
 ```bash
 vercel --prod
 ```
+
+---
+
+## 👤 Author
+
+- **Ammar Al Ghifary** - [GitHub](https://github.com/AmmarAlGhifary)

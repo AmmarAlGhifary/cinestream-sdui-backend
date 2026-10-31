@@ -9,7 +9,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     try {
         logger.info('Fetching movies from TMDB');
 
-        const trendingResponse = await axios.get(`${BASE_URL}/trending/movie/day?api_key=${TMDB_API_KEY}`);
+        const trendingResponse = await axios.get(`${BASE_URL}/trending/movie/week?api_key=${TMDB_API_KEY}`);
         const trendingMovies = trendingResponse.data.results;
 
         const upcomingRespone = await axios.get(`${BASE_URL}/movie/upcoming?api_key=${TMDB_API_KEY}`);
@@ -82,7 +82,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                         type: "section_header",
                         title: {
                             type: "text",
-                            text_content: "Trending Now"
+                            text_content: "This Week!"
                         },
                         action_button: {
                             type: "text_button",

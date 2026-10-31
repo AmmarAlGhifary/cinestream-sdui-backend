@@ -12,7 +12,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         let pageTitle = "";
 
         if (listType === "trending") {
-            tmdbUrl = `${BASE_URL}/trending/movie/day?api_key=${TMDB_API_KEY}`;
+            tmdbUrl = `${BASE_URL}/trending/movie/week?api_key=${TMDB_API_KEY}`;
             pageTitle = "Trending Movies";
         } else if (listType === "upcoming") {
             tmdbUrl = `${BASE_URL}/movie/upcoming?api_key=${TMDB_API_KEY}`;
