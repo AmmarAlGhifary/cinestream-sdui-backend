@@ -39,7 +39,8 @@ flowchart LR
         B3 --> B4["Emit SduiScreen JSON"]
     end
     
-    B --- BFFP
+    
+    B -.-> B1
 ```
 
 ---
