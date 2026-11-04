@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "vercel dev --local --token dummy",
+    "start": "vercel dev --local --token dummy",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
