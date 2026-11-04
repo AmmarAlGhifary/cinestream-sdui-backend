@@ -1,11 +1,11 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import axios from 'axios';
-import { logger } from './logger';
+import { logger, tmdbGet, logRequest, logMissingImages } from './logger';
 
 const TMDB_API_KEY = "fa2c849fca1204cdc46abea78adbbb86";
 const BASE_URL = "https://api.themoviedb.org/3";
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
+    logRequest('/api/movie_list_screen', req, res);
     try {
         const listType = req.query.list_type;
         let tmdbUrl = "";
@@ -25,8 +25,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             return res.status(400).json({ error: "Invalid list type" });
         }
 
-        const response = await axios.get(tmdbUrl);
+        const response = await tmdbGet(tmdbUrl);
         const movies = response.data.results;
+
+        logMissingImages(`list ${listType}`, movies);
 
         const listItems = movies.map((movie: any) => ({
             type: "movie_list_item",
@@ -61,7 +63,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             }
         };
 
-        logger.info(`Successfully generated List blueprint for ${listType}`);
+        logger.info(`Successfully generated List blueprint for ${listType}`, { items: listItems.length });
         res.status(200).json(sduiResponse);
     } catch (error: any) {
         logger.error("TMDB Fetch Error: ", { message: error.message, stack: error.stack });

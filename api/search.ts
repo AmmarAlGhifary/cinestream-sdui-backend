@@ -1,11 +1,11 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import axios from 'axios';
-import { logger } from './logger';
+import { logger, tmdbGet, logRequest, logMissingImages } from './logger';
 
 const TMDB_API_KEY = "fa2c849fca1204cdc46abea78adbbb86";
 const BASE_URL = "https://api.themoviedb.org/3";
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
+    logRequest('/api/search', req, res);
     try {
         const query = req.query.query;
 
@@ -17,8 +17,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             });
         }
 
-        const response = await axios.get(`${BASE_URL}/search/movie?query=${encodeURIComponent(query as string)}&api_key=${TMDB_API_KEY}`);
+        const response = await tmdbGet(`${BASE_URL}/search/movie?query=${encodeURIComponent(query as string)}&api_key=${TMDB_API_KEY}`);
         const movies = response.data.results;
+
+        logMissingImages(`search "${query}"`, movies);
 
         const listItems = movies.map((movie: any) => ({
             type: "movie_list_item",
@@ -43,6 +45,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             }
         };
 
+        logger.info('Successfully generated Search blueprint', { query, items: listItems.length });
         res.status(200).json(sduiResponse);
     } catch (error: any) {
         logger.error("TMDB Search Error: ", { message: error.message, stack: error.stack });

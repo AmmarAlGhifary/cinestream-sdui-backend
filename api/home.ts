@@ -1,24 +1,26 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import axios from 'axios';
-import { logger } from './logger';
+import { logger, tmdbGet, logRequest, logMissingImages } from './logger';
 
 const TMDB_API_KEY = "fa2c849fca1204cdc46abea78adbbb86";
 const BASE_URL = "https://api.themoviedb.org/3";
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
+    logRequest('/api/home', req, res);
     try {
-        logger.info('Fetching movies from TMDB');
 
-        const trendingResponse = await axios.get(`${BASE_URL}/trending/movie/week?api_key=${TMDB_API_KEY}`);
+        const trendingResponse = await tmdbGet(`${BASE_URL}/trending/movie/week?api_key=${TMDB_API_KEY}`);
         const trendingMovies = trendingResponse.data.results;
 
-        const upcomingRespone = await axios.get(`${BASE_URL}/movie/upcoming?api_key=${TMDB_API_KEY}`);
+        const upcomingRespone = await tmdbGet(`${BASE_URL}/movie/upcoming?api_key=${TMDB_API_KEY}`);
         const upcomingMovies = upcomingRespone.data.results;
 
         if (!trendingMovies || trendingMovies.length === 0) {
             logger.warn('No movies found from TMDB response');
             return res.status(500).json({ error: "No movies found from TMDB" });
         }
+
+        logMissingImages('home trending', trendingMovies, ['poster_path', 'backdrop_path']);
+        logMissingImages('home upcoming', upcomingMovies);
 
         const heroMovie = trendingMovies[0];
         const trendingCarousel = trendingMovies.slice(1, 11).map(mapToMovieCard);
@@ -130,7 +132,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             }
         };
 
-        logger.info('Successfully generated SDUI blueprint');
+        logger.info('Successfully generated SDUI blueprint', {
+            hero: heroMovie.title || heroMovie.name,
+            trending: trendingCarousel.length,
+            upcoming: upcomingCarousel.length,
+        });
         res.status(200).json(sduiResponse);
 
     } catch (error: any) {

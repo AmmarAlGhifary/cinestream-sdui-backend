@@ -1,11 +1,11 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import axios from 'axios';
-import { logger } from './logger';
+import { logger, tmdbGet, logRequest, logMissingImages } from './logger';
 
 const TMDB_API_KEY = "fa2c849fca1204cdc46abea78adbbb86";
 const BASE_URL = "https://api.themoviedb.org/3";
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
+    logRequest('/api/movie_detail_screen', req, res);
     try {
         const movieId = req.query.movie_id;
 
@@ -15,10 +15,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
         logger.info(`Fetching details for movie: ${movieId}`);
 
-        const movieResponse = await axios.get(`${BASE_URL}/movie/${movieId}?api_key=${TMDB_API_KEY}`);
+        const movieResponse = await tmdbGet(`${BASE_URL}/movie/${movieId}?api_key=${TMDB_API_KEY}`);
         const movie = movieResponse.data;
 
-        const similarResponse = await axios.get(`${BASE_URL}/movie/${movieId}/similar?api_key=${TMDB_API_KEY}`);
+        const similarResponse = await tmdbGet(`${BASE_URL}/movie/${movieId}/similar?api_key=${TMDB_API_KEY}`);
+        logMissingImages(`detail ${movieId}`, [movie], ['poster_path', 'backdrop_path']);
+        logMissingImages(`detail ${movieId} similar`, similarResponse.data.results);
         const similarMovies = similarResponse.data.results.slice(0, 10).map(mapToMovieCard);
 
         const detailScreenResponse = {
