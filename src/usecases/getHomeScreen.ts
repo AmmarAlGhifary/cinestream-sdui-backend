@@ -1,4 +1,6 @@
 import { getTrending, getUpcoming } from '../data/tmdb/repository';
+import { requireMovieFields } from '../data/tmdb/validate';
+import { AppError } from '../errors/appError';
 import { logger } from '../logging/logger';
 import { logMissingImages } from '../logging/missingImages';
 import { buildHomeScreen } from '../screens/homeScreen';
@@ -7,14 +9,12 @@ import type { Screen } from '../sdui/models';
 
 const CAROUSEL_SIZE = 10;
 
-/** Resolves to `null` when TMDB returns no trending movies. */
-export async function getHomeScreen(): Promise<Screen | null> {
+export async function getHomeScreen(): Promise<Screen> {
     const trendingMovies = await getTrending();
     const upcomingMovies = await getUpcoming();
 
-    if (!trendingMovies || trendingMovies.length === 0) {
-        logger.warn('No movies found from TMDB response');
-        return null;
+    if (trendingMovies.length === 0) {
+        throw new AppError("CONTENT_UNAVAILABLE", { detail: "TMDB returned no trending movies" });
     }
 
     logMissingImages('home trending', trendingMovies, ['poster_path', 'backdrop_path']);
@@ -24,6 +24,8 @@ export async function getHomeScreen(): Promise<Screen | null> {
     const hero = trendingMovies[0];
     const trending = trendingMovies.slice(1, CAROUSEL_SIZE + 1);
     const upcoming = upcomingMovies.slice(0, CAROUSEL_SIZE);
+
+    requireMovieFields([hero, ...trending, ...upcoming]);
 
     const homeScreen = buildHomeScreen({ hero, trending, upcoming });
 

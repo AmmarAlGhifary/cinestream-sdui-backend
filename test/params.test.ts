@@ -4,15 +4,16 @@ import listHandler from '../api/movie_list_screen';
 import { getMovie, getSimilar } from '../src/data/tmdb/repository';
 import { parseMovieId } from '../src/http/params';
 import { fakeTmdb } from './helpers/axiosMock';
+import { errorBody } from './helpers/errors';
 import { invoke } from './helpers/http';
 import { trending, upcoming } from './fixtures/movies';
 
 vi.mock('axios', () => import('./helpers/axiosMock'));
 
-const MISSING = 'Missing movie_id parameter';
-const INVALID = 'Invalid movie_id parameter';
+const MISSING = 'MISSING_PARAMETER';
+const INVALID = 'INVALID_PARAMETER';
 
-const rejected: [string, string | string[] | undefined, string][] = [
+const rejected: [string, string | string[] | undefined, typeof MISSING | typeof INVALID][] = [
     ['absent', undefined, MISSING],
     ['empty', '', MISSING],
     ['non-numeric', 'abc', INVALID],
@@ -47,11 +48,11 @@ describe('movie_id validation', () => {
         ['movie_detail_screen', detailHandler, {}],
         ['movie_list_screen?list_type=similar', listHandler, { list_type: 'similar' }],
     ])('GET /api/%s', (_route, handler, extra: Record<string, string>) => {
-        it.each(rejected)('returns 400 without calling TMDB when movie_id is %s', async (_label, movieId, error) => {
+        it.each(rejected)('returns 400 without calling TMDB when movie_id is %s', async (_label, movieId, code) => {
             const { status, body } = await invoke(handler, query(movieId, extra));
 
             expect(status).toBe(400);
-            expect(body).toEqual({ error });
+            expect(body).toEqual(errorBody(code));
             expect(fakeTmdb.requestedPaths()).toEqual([]);
         });
     });
@@ -69,7 +70,7 @@ describe('movie_id validation', () => {
     });
 
     it.each(['1', '550', '9999999999'])('accepts %s', (movieId) => {
-        expect(parseMovieId(movieId)).toEqual({ ok: true, movieId });
+        expect(parseMovieId(movieId)).toBe(movieId);
     });
 });
 

@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import handler from '../api/search';
 import { fakeTmdb } from './helpers/axiosMock';
+import { errorBody } from './helpers/errors';
 import { invoke } from './helpers/http';
 import { searchResults } from './fixtures/movies';
 
@@ -47,12 +48,12 @@ describe('GET /api/search', () => {
         expect(fakeTmdb.requestedPaths()).toEqual([]);
     });
 
-    it('returns 500 when the TMDB request fails', async () => {
+    it('returns UPSTREAM_ERROR when the TMDB request fails', async () => {
         fakeTmdb.fail();
 
         const { status, body } = await invoke(handler, { query: 'answer' });
 
-        expect(status).toBe(500);
-        expect(body).toEqual({ error: 'Failed to generate Search blueprint' });
+        expect(status).toBe(502);
+        expect(body).toEqual(errorBody('UPSTREAM_ERROR'));
     });
 });

@@ -23,6 +23,7 @@ describe('GET /api/index', () => {
             message: 'CineStream SDUI BFF is running!',
             version: '1.0.0',
             environment: 'development',
+            maintenance: false,
             timestamp: '2026-01-02T03:04:05.678Z',
             endpoints: {
                 home: '/api/home',

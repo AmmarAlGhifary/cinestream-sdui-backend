@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import handler from '../api/home';
 import { fakeTmdb } from './helpers/axiosMock';
+import { errorBody } from './helpers/errors';
 import { invoke } from './helpers/http';
 import { trending, upcoming } from './fixtures/movies';
 
@@ -19,33 +20,39 @@ describe('GET /api/home', () => {
         expect(fakeTmdb.requestedPaths()).toEqual(['/movie/upcoming', '/trending/movie/week']);
     });
 
-    it.each([
-        ['an empty list', { results: [] }],
-        ['no results field', {}],
-    ])('returns 500 when trending has %s', async (_label, trendingBody) => {
-        fakeTmdb.respond({ '/trending/movie/week': trendingBody, '/movie/upcoming': upcoming });
+    it('returns CONTENT_UNAVAILABLE when trending is empty', async () => {
+        fakeTmdb.respond({ '/trending/movie/week': { results: [] }, '/movie/upcoming': upcoming });
 
         const { status, body } = await invoke(handler);
 
-        expect(status).toBe(500);
-        expect(body).toEqual({ error: 'No movies found from TMDB' });
+        expect(status).toBe(503);
+        expect(body).toEqual(errorBody('CONTENT_UNAVAILABLE'));
     });
 
-    it('returns 500 when TMDB requests fail', async () => {
+    it('returns UPSTREAM_ERROR when trending has no results field', async () => {
+        fakeTmdb.respond({ '/trending/movie/week': {}, '/movie/upcoming': upcoming });
+
+        const { status, body } = await invoke(handler);
+
+        expect(status).toBe(502);
+        expect(body).toEqual(errorBody('UPSTREAM_ERROR'));
+    });
+
+    it('returns UPSTREAM_ERROR when TMDB requests fail', async () => {
         fakeTmdb.fail();
 
         const { status, body } = await invoke(handler);
 
-        expect(status).toBe(500);
-        expect(body).toEqual({ error: 'Failed to generate SDUI blueprint' });
+        expect(status).toBe(502);
+        expect(body).toEqual(errorBody('UPSTREAM_ERROR'));
     });
 
-    it('returns 500 when only the upcoming request fails', async () => {
+    it('returns UPSTREAM_ERROR when only the upcoming request fails', async () => {
         fakeTmdb.respond({ '/trending/movie/week': trending });
 
         const { status, body } = await invoke(handler);
 
-        expect(status).toBe(500);
-        expect(body).toEqual({ error: 'Failed to generate SDUI blueprint' });
+        expect(status).toBe(502);
+        expect(body).toEqual(errorBody('UPSTREAM_ERROR'));
     });
 });

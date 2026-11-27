@@ -9,6 +9,30 @@ body root type the Android client does not support yet) is a major version.
 
 ## [Unreleased]
 
+### Added
+
+- Error codes with a user-readable `title` and `message`, a `retryable` flag and, when Vercel provides
+  it, a `request_id`. Error responses are sent with `Cache-Control: no-store`, and with `Retry-After`
+  where retrying later helps.
+- 405 `METHOD_NOT_ALLOWED` (with `Allow: GET, HEAD`) for any other method.
+- A JSON 404 `SCREEN_NOT_FOUND` for unknown paths.
+- An 8 second timeout on TMDB requests.
+- Maintenance mode: with `MAINTENANCE_MODE=true`, screen endpoints return 503 `MAINTENANCE` without
+  calling TMDB. `/api/index` stays up and reports `maintenance`.
+- Rewrites `/movie_list_screen` and `/search`.
+
+### Changed
+
+- **Error body shape:** every error is now `{"error": {"code", "title", "message", "retryable",
+  "request_id"}}` instead of `{"error": "<text>"}`. Success responses are unchanged.
+- Error statuses are specific: for example, a TMDB failure is 502 or 504 and an unknown movie 404
+  (all were 500), and an empty home feed is 503.
+- A search `query` that is repeated or longer than 200 characters returns 400.
+
+### Security
+
+- Repository files are no longer served as static files.
+
 ## [1.0.0] - 2026-11-27
 
 First tagged release of the Backend-for-Frontend that turns TMDB data into SDUI screens for the
