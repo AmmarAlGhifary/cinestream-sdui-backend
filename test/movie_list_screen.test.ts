@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import handler from '../api/movie_list_screen';
 import { fakeTmdb } from './helpers/axiosMock';
+import { errorBody } from './helpers/errors';
 import { invoke } from './helpers/http';
 import { similar, trending, upcoming } from './fixtures/movies';
 
@@ -30,16 +31,16 @@ describe('GET /api/movie_list_screen', () => {
         const { status, body } = await invoke(handler, query);
 
         expect(status).toBe(400);
-        expect(body).toEqual({ error: 'Invalid list type' });
+        expect(body).toEqual(errorBody('INVALID_PARAMETER'));
         expect(fakeTmdb.requestedPaths()).toEqual([]);
     });
 
-    it('returns 500 when the TMDB request fails', async () => {
+    it('returns UPSTREAM_ERROR when the TMDB request fails', async () => {
         fakeTmdb.fail();
 
         const { status, body } = await invoke(handler, { list_type: 'trending' });
 
-        expect(status).toBe(500);
-        expect(body).toEqual({ error: 'Failed to generate List blueprint' });
+        expect(status).toBe(502);
+        expect(body).toEqual(errorBody('UPSTREAM_ERROR'));
     });
 });

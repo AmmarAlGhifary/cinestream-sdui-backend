@@ -1,18 +1,34 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
-type Handler = (req: VercelRequest, res: VercelResponse) => unknown;
+export type Handler = (req: VercelRequest, res: VercelResponse) => unknown;
+
+interface RequestOptions {
+    method?: string;
+    headers?: Record<string, string>;
+}
 
 /**
  * Call a Vercel handler with a minimal fake request and response.
  * `body` is what a client would receive: the value passed to `res.json`
  * after a JSON round trip (so `undefined` fields are dropped).
+ * Response header names are lower-cased.
  */
-export async function invoke(handler: Handler, query: Record<string, string> = {}, url = '/') {
+export async function invoke(
+    handler: Handler,
+    query: Record<string, string> = {},
+    url = '/',
+    { method = 'GET', headers = {} }: RequestOptions = {},
+) {
     let body: unknown;
     let sent = 0;
+    const responseHeaders: Record<string, string> = {};
 
     const res = {
         statusCode: 200,
+        setHeader(name: string, value: string) {
+            responseHeaders[name.toLowerCase()] = value;
+            return this;
+        },
         status(code: number) {
             this.statusCode = code;
             return this;
@@ -23,12 +39,12 @@ export async function invoke(handler: Handler, query: Record<string, string> = {
             return this;
         },
     };
-    const req = { method: 'GET', url, query, headers: {} };
+    const req = { method, url, query, headers };
 
     await handler(req as unknown as VercelRequest, res as unknown as VercelResponse);
 
     if (sent !== 1) {
         throw new Error(`Expected exactly one res.json() call, got ${sent}`);
     }
-    return { status: res.statusCode, body: body as any };
+    return { status: res.statusCode, body: body as any, headers: responseHeaders };
 }
