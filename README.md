@@ -48,7 +48,7 @@ flowchart LR
 ```mermaid
 flowchart TD
     API["api/<br/>Vercel entry points"] --> UC["src/usecases<br/>fetch, log, assemble"]
-    API --> HTTP["src/http<br/>request log, error to 500"]
+    API --> HTTP["src/http<br/>request log, error responses"]
     UC --> DATA["src/data/tmdb<br/>client, repository, DTOs"]
     UC --> SCREENS["src/screens<br/>pure screen builders"]
     SCREENS --> SDUI["src/sdui<br/>component models and builders"]
@@ -65,6 +65,7 @@ flowchart TD
 | `src/sdui`      | Typed SDUI component models and builders: the JSON contract                                          |
 | `src/config`    | TMDB base URL, image URL and sizes, and the `TMDB_API_KEY` lookup                                   |
 | `src/logging`   | Logger and missing-image warnings, used across layers                                                |
+| `src/errors`    | The error catalog (codes, statuses, user texts) and AppError, used across layers                     |
 | `src/http`      | Request logging and mapping errors to the error contract                                             |
 
 Only handlers belong in `api/`, because Vercel deploys every file there as a serverless function.
@@ -81,8 +82,10 @@ All serverless functions live in `/api` and conform to polymorphic `SduiScreen` 
 | `GET`  | `/api/index`               | `/`                    | None                                                                       | Service health check and endpoint directory                       |
 | `GET`  | `/api/home`                | `/home`                | None                                                                       | Home dashboard: Hero banner + Trending and Upcoming carousels     |
 | `GET`  | `/api/movie_detail_screen` | `/movie_detail_screen` | `movie_id` (required)                                                      | Detailed movie screen with metadata, overview, and similar movies |
-| `GET`  | `/api/movie_list_screen`   | None                   | `list_type` (`trending` \| `upcoming` \| `similar`), `movie_id` (if similar) | Paginated / full vertical list view for categories                |
-| `GET`  | `/api/search`              | None                   | `query` (required)                                                         | Search TMDB titles with vertical result listing                   |
+| `GET`  | `/api/movie_list_screen`   | `/movie_list_screen`   | `list_type` (`trending` \| `upcoming` \| `similar`), `movie_id` (if similar) | Paginated / full vertical list view for categories                |
+| `GET`  | `/api/search`              | `/search`              | `query` (required)                                                         | Search TMDB titles with vertical result listing                   |
+
+Unknown paths return 404 `SCREEN_NOT_FOUND`, and methods other than `GET`/`HEAD` return 405 (see [docs/errors.md](docs/errors.md)).
 
 ### Errors
 
