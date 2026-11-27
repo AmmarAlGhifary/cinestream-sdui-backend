@@ -43,6 +43,32 @@ flowchart LR
     B -.-> B1
 ```
 
+### Code Layers
+
+```mermaid
+flowchart TD
+    API["api/<br/>Vercel entry points"] --> UC["src/usecases<br/>fetch, log, assemble"]
+    API --> HTTP["src/http<br/>request log, error to 500"]
+    UC --> DATA["src/data/tmdb<br/>client, repository, DTOs"]
+    UC --> SCREENS["src/screens<br/>pure screen builders"]
+    SCREENS --> SDUI["src/sdui<br/>component models and builders"]
+    DATA --> CONFIG["src/config<br/>TMDB URLs, key, image sizes"]
+    SCREENS --> CONFIG
+```
+
+| Folder          | Responsibility                                                                                       |
+| :-------------- | :--------------------------------------------------------------------------------------------------- |
+| `api/`          | One thin handler per endpoint: validate the query, call the use case, send the response             |
+| `src/usecases`  | Orchestrate one screen: fetch from the repository, log, select movies, call the screen builder      |
+| `src/data/tmdb` | TMDB HTTP client (logging, `api_key` redaction), repository and response types                       |
+| `src/screens`   | Pure functions that turn TMDB data into a screen, with no I/O (they import data types only)          |
+| `src/sdui`      | Typed SDUI component models and builders: the JSON contract                                          |
+| `src/config`    | The single definition of the TMDB base URL, image URL and sizes, and API key                         |
+| `src/logging`   | Logger and missing-image warnings, used across layers                                                |
+| `src/http`      | Request logging and the shared error-to-500 wrapper                                                  |
+
+Only handlers belong in `api/`, because Vercel deploys every file there as a serverless function.
+
 ---
 
 ## 📡 Endpoints Specification

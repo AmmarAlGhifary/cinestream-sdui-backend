@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { logger } from './logger';
+import { logger } from '../src/logging/logger';
 
 export default function handler(req: VercelRequest, res: VercelResponse) {
     logger.info('Health check endpoint called', { url: req.url });
