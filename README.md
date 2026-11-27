@@ -180,11 +180,14 @@ Every endpoint returns a polymorphic `screen` object consisting of a `toolbar` a
    
 ## 🚀 Deployment
 
-Pushing to the `main` branch automatically deploys to Vercel production:
+`main` is production: every merge into `main` deploys to Vercel production. Branches other than `main` (including `develop` and PR branches) get Vercel preview deployments.
 
-```bash
-vercel --prod
-```
+## 🌿 Branching & Releases
+
+- Work happens on `feature/<name>` (or `fix/`, `chore/`, `docs/`) branched off `develop`, and is merged into `develop` through a pull request.
+- `main` and `develop` are protected: changes go through a pull request that passes the `build` check, with no force-pushes or deletion.
+- A release is a pull request from `develop` into `main`, approved by the owner. After it merges, the merge commit on `main` is tagged `vX.Y.Z` (annotated) and a GitHub Release is published from the matching `CHANGELOG.md` entry. Releases are immutable.
+- The version lives in `package.json` and follows [Semantic Versioning](https://semver.org/); see [CHANGELOG.md](CHANGELOG.md).
 
 ---
 
@@ -202,4 +205,4 @@ npm test             # run the tests (no network or TMDB key needed)
 npx vitest run -u    # update snapshots after an intended JSON change
 ```
 
-GitHub Actions runs `npm ci`, `npm run typecheck` and `npm test` in the `build` job on pull requests into `main` and on pushes to `main`.
+GitHub Actions runs `npm ci`, `npm run typecheck` and `npm test` in the `build` job on pull requests into `develop` and `main` (and on demand).
