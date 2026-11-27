@@ -84,6 +84,10 @@ All serverless functions live in `/api` and conform to polymorphic `SduiScreen` 
 | `GET`  | `/api/movie_list_screen`   | None                   | `list_type` (`trending` | `upcoming` | `similar`), `movie_id` (if similar) | Paginated / full vertical list view for categories                |
 | `GET`  | `/api/search`              | None                   | `query` (required)                                                         | Search TMDB titles with vertical result listing                   |
 
+### Errors
+
+Non-2xx responses use a shared JSON envelope with a stable error code; see [docs/errors.md](docs/errors.md).
+
 
 ---
 
