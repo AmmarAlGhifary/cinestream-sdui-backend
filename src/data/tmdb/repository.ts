@@ -22,13 +22,13 @@ export function getUpcoming(): Promise<TmdbMovie[]> {
     return getMovies(endpoint('/movie/upcoming'));
 }
 
-export async function getMovie(movieId: QueryParam): Promise<TmdbMovieDetail> {
-    const response = await tmdbGet<TmdbMovieDetail>(endpoint(`/movie/${movieId}`));
+export async function getMovie(movieId: string): Promise<TmdbMovieDetail> {
+    const response = await tmdbGet<TmdbMovieDetail>(endpoint(`/movie/${encodeURIComponent(movieId)}`));
     return response.data;
 }
 
-export function getSimilar(movieId: QueryParam | undefined): Promise<TmdbMovie[]> {
-    return getMovies(endpoint(`/movie/${movieId}/similar`));
+export function getSimilar(movieId: string): Promise<TmdbMovie[]> {
+    return getMovies(endpoint(`/movie/${encodeURIComponent(movieId)}/similar`));
 }
 
 export function searchMovies(query: QueryParam): Promise<TmdbMovie[]> {
