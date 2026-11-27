@@ -63,7 +63,7 @@ flowchart TD
 | `src/data/tmdb` | TMDB HTTP client (logging, `api_key` redaction), repository and response types                       |
 | `src/screens`   | Pure functions that turn TMDB data into a screen, with no I/O (they import data types only)          |
 | `src/sdui`      | Typed SDUI component models and builders: the JSON contract                                          |
-| `src/config`    | The single definition of the TMDB base URL, image URL and sizes, and API key                         |
+| `src/config`    | TMDB base URL, image URL and sizes, and the `TMDB_API_KEY` lookup                                   |
 | `src/logging`   | Logger and missing-image warnings, used across layers                                                |
 | `src/http`      | Request logging and the shared error-to-500 wrapper                                                  |
 
@@ -153,7 +153,17 @@ Every endpoint returns a polymorphic `screen` object consisting of a `toolbar` a
    ```bash
     npm install
    ```
-2. **Run Local Dev Server**:
+2. **Provide the TMDB API Key**: `npm start` needs `TMDB_API_KEY` in a `.env` file. Pull the development environment from Vercel (requires a linked project):
+   ```bash
+    vercel env pull .env
+   ```
+   or create `.env` yourself:
+   ```bash
+    TMDB_API_KEY=<your key>
+   ```
+   Use `.env`, not `.env.local`: the local dev server did not load `.env.local` when tested with Vercel CLI 54.15.1. `.env` is gitignored; never commit it. Without the key, requests that need TMDB return 500.
+
+3. **Run Local Dev Server**:
    ```bash
     npm start
     # Runs: vercel dev --local --token dummy
@@ -161,7 +171,7 @@ Every endpoint returns a polymorphic `screen` object consisting of a `toolbar` a
 
     *The server starts on `http://localhost:3000`.*  
    
-3. **Connect the Android Emulator**:
+4. **Connect the Android Emulator**:
    - Point your Android app's base URL in `gradle.properties` to:  
   ```bash
     BASE_URL=http://10.0.2.2:3000/
@@ -187,7 +197,7 @@ vercel --prod
 
 ```bash
 npm ci               # install the locked dependencies
-npm run typecheck    # type-check api/
+npm run typecheck    # type-check api/ and src/
 npm test             # run the tests (no network or TMDB key needed)
 npx vitest run -u    # update snapshots after an intended JSON change
 ```

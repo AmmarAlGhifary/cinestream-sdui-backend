@@ -1,4 +1,4 @@
-import { TMDB_API_KEY, TMDB_BASE_URL } from '../../config/tmdb';
+import { TMDB_BASE_URL, getTmdbApiKey } from '../../config/tmdb';
 import { tmdbGet } from './client';
 import type { TmdbMovie, TmdbMovieDetail, TmdbMoviePage } from './dtos';
 
@@ -6,7 +6,7 @@ import type { TmdbMovie, TmdbMovieDetail, TmdbMoviePage } from './dtos';
 type QueryParam = string | string[];
 
 function endpoint(path: string): string {
-    return `${TMDB_BASE_URL}${path}?api_key=${TMDB_API_KEY}`;
+    return `${TMDB_BASE_URL}${path}?api_key=${getTmdbApiKey()}`;
 }
 
 async function getMovies(url: string): Promise<TmdbMovie[]> {
@@ -33,5 +33,5 @@ export function getSimilar(movieId: QueryParam | undefined): Promise<TmdbMovie[]
 
 export function searchMovies(query: QueryParam): Promise<TmdbMovie[]> {
     const encoded = encodeURIComponent(String(query));
-    return getMovies(`${TMDB_BASE_URL}/search/movie?query=${encoded}&api_key=${TMDB_API_KEY}`);
+    return getMovies(`${TMDB_BASE_URL}/search/movie?query=${encoded}&api_key=${getTmdbApiKey()}`);
 }
