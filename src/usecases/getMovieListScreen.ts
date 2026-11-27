@@ -1,5 +1,6 @@
 import type { TmdbMovie } from '../data/tmdb/dtos';
 import { getSimilar, getTrending, getUpcoming } from '../data/tmdb/repository';
+import { requireMovieFields } from '../data/tmdb/validate';
 import { logger } from '../logging/logger';
 import { logMissingImages } from '../logging/missingImages';
 import { buildMovieListScreen } from '../screens/movieListScreen';
@@ -39,6 +40,8 @@ export async function getMovieListScreen(
     const movies = await fetch(movieId);
 
     logMissingImages(`list ${listType}`, movies);
+
+    requireMovieFields(movies, { rating: true });
 
     const listScreen = buildMovieListScreen(pageTitle, movies);
 

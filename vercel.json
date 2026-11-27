@@ -11,6 +11,18 @@
     {
       "source": "/movie_detail_screen",
       "destination": "/api/movie_detail_screen"
+    },
+    {
+      "source": "/movie_list_screen",
+      "destination": "/api/movie_list_screen"
+    },
+    {
+      "source": "/search",
+      "destination": "/api/search"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/api/not_found"
     }
   ]
 }

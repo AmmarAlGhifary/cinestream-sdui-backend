@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import handler from '../api/movie_detail_screen';
 import { fakeTmdb } from './helpers/axiosMock';
+import { errorBody } from './helpers/errors';
 import { invoke } from './helpers/http';
 import { movieDetail, similar } from './fixtures/movies';
 
@@ -26,25 +27,25 @@ describe('GET /api/movie_detail_screen', () => {
         const { status, body } = await invoke(handler, query);
 
         expect(status).toBe(400);
-        expect(body).toEqual({ error: 'Missing movie_id parameter' });
+        expect(body).toEqual(errorBody('MISSING_PARAMETER'));
         expect(fakeTmdb.requestedPaths()).toEqual([]);
     });
 
-    it('returns 500 when TMDB requests fail', async () => {
+    it('returns UPSTREAM_ERROR when TMDB requests fail', async () => {
         fakeTmdb.fail();
 
         const { status, body } = await invoke(handler, { movie_id: '42' });
 
-        expect(status).toBe(500);
-        expect(body).toEqual({ error: 'Failed to generate Detail blueprint' });
+        expect(status).toBe(502);
+        expect(body).toEqual(errorBody('UPSTREAM_ERROR'));
     });
 
-    it('returns 500 when only the similar request fails', async () => {
+    it('returns MOVIE_NOT_FOUND when the similar request gets a 404', async () => {
         fakeTmdb.respond({ '/movie/42': movieDetail });
 
         const { status, body } = await invoke(handler, { movie_id: '42' });
 
-        expect(status).toBe(500);
-        expect(body).toEqual({ error: 'Failed to generate Detail blueprint' });
+        expect(status).toBe(404);
+        expect(body).toEqual(errorBody('MOVIE_NOT_FOUND'));
     });
 });

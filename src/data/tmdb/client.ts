@@ -1,20 +1,17 @@
 import axios, { type AxiosError } from 'axios';
+import { TMDB_TIMEOUT_MS } from '../../config/tmdb';
 import { logger } from '../../logging/logger';
-
-/** Remove the TMDB api_key from a URL so it never lands in logs. */
-function redact(url: string): string {
-    return url.replace(/([?&]api_key=)[^&]+/, '$1***');
-}
+import { redactApiKey } from '../../logging/redact';
 
 /**
  * GET a TMDB URL and log endpoint, status, duration and result count.
  * Failures are logged with the upstream status and body, then re-thrown.
  */
 export async function tmdbGet<T>(url: string) {
-    const safeUrl = redact(url);
+    const safeUrl = redactApiKey(url);
     const start = Date.now();
     try {
-        const response = await axios.get<T>(url);
+        const response = await axios.get<T>(url, { timeout: TMDB_TIMEOUT_MS });
         const results = (response.data as { results?: unknown } | undefined)?.results;
         logger.info('TMDB request OK', {
             url: safeUrl,
@@ -29,7 +26,7 @@ export async function tmdbGet<T>(url: string) {
             url: safeUrl,
             status: failure.response?.status,
             ms: Date.now() - start,
-            message: failure.message,
+            message: redactApiKey(String(failure.message)),
             body: failure.response?.data,
         });
         throw error;
