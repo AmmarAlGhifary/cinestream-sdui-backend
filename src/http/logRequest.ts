@@ -18,3 +18,9 @@ export function logRequest(name: string, req: VercelRequest, res: VercelResponse
         return originalJson(body);
     };
 }
+
+/** Answer 204. `res.json` is not called, so the response is logged here. */
+export function sendNoContent(name: string, res: VercelResponse) {
+    logger.info(`<-- ${name} 204`);
+    res.status(204).end();
+}

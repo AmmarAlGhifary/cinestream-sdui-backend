@@ -9,6 +9,32 @@ body root type the Android client does not support yet) is a major version.
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-11-27
+
+### Added
+
+- Sign-in with a TMDB account: `POST /api/auth/request_token`, `POST /api/auth/session` and
+  `DELETE /api/auth/session`. The redirect after approval is `AUTH_REDIRECT_URL`
+  (default `cinestream://auth/tmdb`).
+- A `sign_in_secret`, issued with the request token and required to create the session, binds the
+  session exchange to the client that started the sign-in. It needs the `AUTH_SIGNING_SECRET`
+  environment variable.
+- `POST /api/favorite` adds a movie to, or removes it from, the signed-in user's favorites.
+- The detail screen shows the favorite state when sent `Authorization: Bearer <session_id>`, and adds
+  `X-Session-Invalid: true` when the session is rejected. The favorite button's action body now has a
+  `favorite` field.
+- Error codes `SIGN_IN_REQUIRED`, `SESSION_EXPIRED` and `SIGN_IN_FAILED`.
+
+### Changed
+
+- Allowed methods are set per endpoint, and `Allow` lists them (`POST` for favorites and
+  sign-in, `DELETE` for sign-out, `GET, HEAD` elsewhere).
+
+### Security
+
+- Session ids, request tokens, sign-in secrets and the `Authorization` header are redacted from
+  all logs. The backend never stores a session.
+
 ## [1.1.0] - 2026-11-27
 
 ### Added
@@ -63,6 +89,7 @@ CineStream Android client.
 - npm audit: no vulnerabilities in runtime dependencies (axios 1.21.1). Three dev-only findings remain
   through `@vercel/node`.
 
-[Unreleased]: https://github.com/AmmarAlGhifary/cinestream-sdui-backend/compare/v1.1.0...develop
+[Unreleased]: https://github.com/AmmarAlGhifary/cinestream-sdui-backend/compare/v1.2.0...develop
+[1.2.0]: https://github.com/AmmarAlGhifary/cinestream-sdui-backend/releases/tag/v1.2.0
 [1.1.0]: https://github.com/AmmarAlGhifary/cinestream-sdui-backend/releases/tag/v1.1.0
 [1.0.0]: https://github.com/AmmarAlGhifary/cinestream-sdui-backend/releases/tag/v1.0.0

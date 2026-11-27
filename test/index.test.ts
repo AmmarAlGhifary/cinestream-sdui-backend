@@ -21,7 +21,7 @@ describe('GET /api/index', () => {
         expect(body).toEqual({
             status: 'ok',
             message: 'CineStream SDUI BFF is running!',
-            version: '1.1.0',
+            version: '1.2.0',
             environment: 'development',
             maintenance: false,
             timestamp: '2026-01-02T03:04:05.678Z',

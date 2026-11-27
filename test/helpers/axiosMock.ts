@@ -18,7 +18,30 @@ const axios = actual.default;
 /** TMDB path (without the `/3` version prefix) mapped to the JSON body to return. */
 type Routes = Record<string, unknown>;
 
+/** A route value that makes TMDB answer with an error body instead of data. */
+class TmdbFailure {
+    constructor(readonly status: number, readonly data: unknown) {}
+}
+
+export function tmdbError(status: number, statusCode?: number, extra: Record<string, unknown> = {}) {
+    return new TmdbFailure(status, {
+        success: false,
+        status_code: statusCode,
+        status_message: 'Upstream detail that must stay server-side',
+        ...extra,
+    });
+}
+
+export interface TmdbCall {
+    method: string;
+    path: string;
+    /** Query parameters without `api_key`, which every call must carry. */
+    query: Record<string, string>;
+    body?: unknown;
+}
+
 let routes: Routes = {};
+let calls: TmdbCall[] = [];
 type Failure =
     | { kind: 'error'; error: Error }
     | { kind: 'status'; status: number; headers: Record<string, string> }
@@ -33,6 +56,13 @@ const adapter: AxiosAdapter = async (config) => {
     const path = url.pathname.replace(/^\/3(?=\/)/, '');
     paths.push(path);
     timeouts.push(config.timeout);
+    const { api_key: apiKey, ...query } = Object.fromEntries(url.searchParams);
+    calls.push({
+        method: String(config.method).toUpperCase(),
+        path: apiKey ? path : `${path} (without api_key)`,
+        query,
+        ...(config.data !== undefined && { body: JSON.parse(config.data) }),
+    });
 
     if (failure?.kind === 'error') {
         throw failure.error;
@@ -59,8 +89,19 @@ const adapter: AxiosAdapter = async (config) => {
             config,
         });
     }
+    const route = routes[path];
+    if (route instanceof TmdbFailure) {
+        const { status, data } = route;
+        throw new actual.AxiosError(`Request failed with status code ${status}`, 'ERR_BAD_REQUEST', config, undefined, {
+            data,
+            status,
+            statusText: '',
+            headers: {},
+            config,
+        });
+    }
     return {
-        data: structuredClone(routes[path]),
+        data: structuredClone(route),
         status: 200,
         statusText: 'OK',
         headers: {},
@@ -76,6 +117,7 @@ export const fakeTmdb = {
         routes = {};
         failure = undefined;
         paths = [];
+        calls = [];
         timeouts = [];
     },
     respond(next: Routes) {
@@ -98,6 +140,10 @@ export const fakeTmdb = {
     /** The `timeout` option of each request made. */
     requestTimeouts(): (number | undefined)[] {
         return [...timeouts];
+    },
+    /** Every request made, in order. */
+    calls(): TmdbCall[] {
+        return [...calls];
     },
     /** Requested paths, sorted so that request order doesn't matter. */
     requestedPaths(): string[] {

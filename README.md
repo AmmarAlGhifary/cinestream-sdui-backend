@@ -60,11 +60,11 @@ flowchart TD
 | :-------------- | :--------------------------------------------------------------------------------------------------- |
 | `api/`          | One thin handler per endpoint: validate the query, call the use case, send the response             |
 | `src/usecases`  | Orchestrate one screen: fetch from the repository, log, select movies, call the screen builder      |
-| `src/data/tmdb` | TMDB HTTP client (logging, `api_key` redaction), repository and response types                       |
+| `src/data/tmdb` | TMDB HTTP client (logging), repositories and response types                                          |
 | `src/screens`   | Pure functions that turn TMDB data into a screen, with no I/O (they import data types only)          |
 | `src/sdui`      | Typed SDUI component models and builders: the JSON contract                                          |
-| `src/config`    | TMDB base URL, image URL and sizes, and the `TMDB_API_KEY` lookup                                   |
-| `src/logging`   | Logger and missing-image warnings, used across layers                                                |
+| `src/config`    | TMDB URLs and image sizes, and the environment variable lookups                                     |
+| `src/logging`   | Logger (redacts credentials) and missing-image warnings                                                |
 | `src/errors`    | The error catalog (codes, statuses, user texts) and AppError, used across layers                     |
 | `src/http`      | Request logging and mapping errors to the error contract                                             |
 
@@ -85,7 +85,33 @@ All serverless functions live in `/api` and conform to polymorphic `SduiScreen` 
 | `GET`  | `/api/movie_list_screen`   | `/movie_list_screen`   | `list_type` (`trending` \| `upcoming` \| `similar`), `movie_id` (if similar) | Paginated / full vertical list view for categories                |
 | `GET`  | `/api/search`              | `/search`              | `query` (required)                                                         | Search TMDB titles with vertical result listing                   |
 
-Unknown paths return 404 `SCREEN_NOT_FOUND`, and methods other than `GET`/`HEAD` return 405 (see [docs/errors.md](docs/errors.md)).
+### Sign-in and favorites
+
+These endpoints take and return JSON, not screens.
+
+| Method   | Endpoint                  | Input                                                   | Success response                                                       |
+| :------- | :------------------------ | :------------------------------------------------------ | :--------------------------------------------------------------------- |
+| `POST`   | `/api/auth/request_token` | None                                                    | 200 `{"request_token", "expires_at", "approve_url", "sign_in_secret"}` |
+| `POST`   | `/api/auth/session`       | Body `{"request_token", "sign_in_secret"}`              | 200 `{"session_id", "account": {"id", "username"}}`                    |
+| `DELETE` | `/api/auth/session`       | `Authorization` header                                  | 204, no body                                                           |
+| `POST`   | `/api/favorite`           | `Authorization` header, body `{"movie_id", "favorite"}` | 200 `{"movie_id", "is_favorite", "icon_button"}`                       |
+
+To sign in with a TMDB account:
+
+1. Call `POST /api/auth/request_token`, keep `sign_in_secret` inside the app, and open `approve_url` in a browser.
+2. The user approves, and TMDB sends them to the deep link (`AUTH_REDIRECT_URL`, default `cinestream://auth/tmdb`).
+3. Call `POST /api/auth/session` with the same `request_token` and its `sign_in_secret`.
+4. Send `Authorization: Bearer <session_id>` with later requests.
+
+`sign_in_secret` binds the session exchange to the client that started the sign-in, so another app that catches the redirect can't finish it here.
+
+`expires_at` is an ISO 8601 UTC time, such as `2026-11-27T08:00:00.000Z`. If TMDB's value can't be read, it is passed through unchanged.
+
+`favorite` sets the state; it doesn't toggle it. `icon_button` is the detail screen's updated toolbar button.
+
+With a session, `/api/movie_detail_screen` shows whether the movie is a favorite. The backend is a stateless proxy: it never stores or logs the session.
+
+Unknown paths return 404 `SCREEN_NOT_FOUND`, and a method an endpoint doesn't accept returns 405 (see [docs/errors.md](docs/errors.md)).
 
 ### Errors
 
@@ -96,7 +122,7 @@ Non-2xx responses use a shared JSON envelope with a stable error code; see [docs
 
 ## 🧩 SDUI Blueprint Contract
 
-Every endpoint returns a polymorphic `screen` object consisting of a `toolbar` and a `body`:
+Every screen endpoint returns a polymorphic `screen` object consisting of a `toolbar` and a `body`:
 
 ```json
 {
@@ -168,6 +194,10 @@ Every endpoint returns a polymorphic `screen` object consisting of a `toolbar` a
    ```bash
     TMDB_API_KEY=<your key>
    ```
+   Signing in also needs `AUTH_SIGNING_SECRET`, a long random value (for example from `openssl rand -base64 32`). Without it, the sign-in endpoints return 503 `SERVICE_MISCONFIGURED`.
+
+   Optionally set `AUTH_REDIRECT_URL` to change where TMDB sends the user after they approve a sign-in.
+
    Use `.env`, not `.env.local`: the local dev server did not load `.env.local` when tested with Vercel CLI 54.15.1. `.env` is gitignored; never commit it. Without the key, requests that need TMDB return 503 `SERVICE_MISCONFIGURED`.
 
 3. **Run Local Dev Server**:
