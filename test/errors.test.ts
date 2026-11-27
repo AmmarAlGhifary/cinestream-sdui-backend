@@ -1,7 +1,9 @@
 import { createServer, request, type IncomingHttpHeaders } from 'node:http';
 import type { AddressInfo } from 'node:net';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import favorite from '../api/favorite';
 import detail from '../api/movie_detail_screen';
+import session from '../api/auth/session';
 import home from '../api/home';
 import index from '../api/index';
 import list from '../api/movie_list_screen';
@@ -9,7 +11,7 @@ import notFound from '../api/not_found';
 import search from '../api/search';
 import { ERROR_CATALOG, type ErrorCode } from '../src/errors/appError';
 import { errorBody } from './helpers/errors';
-import { fakeTmdb } from './helpers/axiosMock';
+import { fakeTmdb, tmdbError } from './helpers/axiosMock';
 import { invoke, type Handler } from './helpers/http';
 import { movie, movieDetail, similar, trending, upcoming } from './fixtures/movies';
 
@@ -32,12 +34,17 @@ const TABLE: [ErrorCode, number, boolean, number | undefined, string, string][] 
     ['SERVICE_MISCONFIGURED', 503, false, undefined, 'Service unavailable', "CineStream is temporarily unavailable. We're working on it."],
     ['MAINTENANCE', 503, true, 300, 'Under maintenance', 'CineStream is being updated. Please check back soon.'],
     ['INTERNAL_ERROR', 500, true, undefined, 'Something went wrong', 'An unexpected error occurred. Please try again.'],
+    ['SIGN_IN_REQUIRED', 401, false, undefined, 'Sign in required', 'Sign in with your TMDB account to save favorites.'],
+    ['SESSION_EXPIRED', 401, false, undefined, 'Session expired', 'Please sign in again to keep using favorites.'],
+    ['SIGN_IN_FAILED', 401, false, undefined, "Sign-in didn't finish", "We couldn't complete sign-in. Please try again."],
 ];
 
 interface Scenario {
     handler: Handler;
     query?: Record<string, string>;
     method?: string;
+    headers?: Record<string, string>;
+    body?: unknown;
     arrange?: () => void;
 }
 
@@ -58,6 +65,20 @@ const SCENARIOS: Record<ErrorCode, Scenario> = {
     SERVICE_MISCONFIGURED: { handler: home, arrange: () => vi.stubEnv('TMDB_API_KEY', '') },
     MAINTENANCE: { handler: home, arrange: () => vi.stubEnv('MAINTENANCE_MODE', 'true') },
     INTERNAL_ERROR: { handler: home, arrange: () => fakeTmdb.fail(new TypeError('boom')) },
+    SIGN_IN_REQUIRED: { handler: favorite, method: 'POST' },
+    SESSION_EXPIRED: {
+        handler: favorite,
+        method: 'POST',
+        headers: { authorization: 'Bearer stale-session' },
+        body: { movie_id: '42', favorite: true },
+        arrange: () => fakeTmdb.respond({ '/account': tmdbError(401, 3) }),
+    },
+    SIGN_IN_FAILED: {
+        handler: session,
+        method: 'POST',
+        body: { request_token: 'unapproved-token' },
+        arrange: () => fakeTmdb.respond({ '/authentication/session/new': tmdbError(401, 17) }),
+    },
 };
 
 /** Codes that are decided before TMDB is contacted. */
@@ -68,10 +89,11 @@ const NO_TMDB_CALL: ErrorCode[] = [
     'SCREEN_NOT_FOUND',
     'SERVICE_MISCONFIGURED',
     'MAINTENANCE',
+    'SIGN_IN_REQUIRED',
 ];
 
-function run({ handler, query = {}, method }: Scenario, headers: Record<string, string> = {}) {
-    return invoke(handler, query, '/', { method, headers });
+function run({ handler, query = {}, method, headers, body }: Scenario, extra: Record<string, string> = {}) {
+    return invoke(handler, query, '/', { method, headers: { ...headers, ...extra }, body });
 }
 
 const screens: [string, Handler, Record<string, string>][] = [
@@ -99,10 +121,12 @@ describe('error catalog', () => {
         });
     });
 
-    it.each(Object.entries(ERROR_CATALOG))('keeps the user text of %s short and clean', (_code, { title, message }) => {
+    it.each(Object.entries(ERROR_CATALOG))('keeps the user text of %s short and clean', (code, { title, message }) => {
         expect(title.length).toBeLessThanOrEqual(40);
         expect(message.length).toBeLessThanOrEqual(160);
-        expect(`${title} ${message}`).not.toMatch(/tmdb|http|api_key/i);
+        // Signing in is with the user's TMDB account, so that one text names it.
+        const upstreamDetail = code === 'SIGN_IN_REQUIRED' ? /http|api_key/i : /tmdb|http|api_key/i;
+        expect(`${title} ${message}`).not.toMatch(upstreamDetail);
     });
 
     it('cannot be changed at runtime', () => {
@@ -375,7 +399,8 @@ async function overHttp(handler: Handler, method: string, query: Record<string, 
 }
 
 describe('HEAD', () => {
-    it.each(TABLE.map(([code]) => code).filter((code) => code !== 'METHOD_NOT_ALLOWED'))(
+    // Only codes reachable with a GET: HEAD does not apply to the POST endpoints.
+    it.each(TABLE.map(([code]) => code).filter((code) => !SCENARIOS[code].method))(
         'answers %s like GET, without a body',
         async (code) => {
             const { handler, query = {}, arrange } = SCENARIOS[code];

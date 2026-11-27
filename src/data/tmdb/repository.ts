@@ -5,7 +5,7 @@ import { tmdbGet } from './client';
 import type { TmdbMovie, TmdbMovieDetail, TmdbMoviePage } from './dtos';
 import { requireMovieFields } from './validate';
 
-function endpoint(path: string): string {
+export function endpoint(path: string): string {
     return `${TMDB_BASE_URL}${path}?api_key=${getTmdbApiKey()}`;
 }
 
@@ -19,7 +19,7 @@ async function getMovies(url: string): Promise<TmdbMovie[]> {
 }
 
 /** For requests about one movie, where a TMDB 404 means the movie does not exist. */
-async function forMovie<T>(request: () => Promise<T>): Promise<T> {
+export async function forMovie<T>(request: () => Promise<T>): Promise<T> {
     try {
         return await request();
     } catch (error) {

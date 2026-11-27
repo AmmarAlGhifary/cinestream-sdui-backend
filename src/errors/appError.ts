@@ -15,7 +15,10 @@ export type ErrorCode =
     | "UPSTREAM_ERROR"
     | "SERVICE_MISCONFIGURED"
     | "MAINTENANCE"
-    | "INTERNAL_ERROR";
+    | "INTERNAL_ERROR"
+    | "SIGN_IN_REQUIRED"
+    | "SESSION_EXPIRED"
+    | "SIGN_IN_FAILED";
 
 export interface ErrorSpec {
     readonly status: number;
@@ -105,6 +108,24 @@ export const ERROR_CATALOG: Readonly<Record<ErrorCode, ErrorSpec>> = Object.free
         retryable: true,
         title: "Something went wrong",
         message: "An unexpected error occurred. Please try again.",
+    }),
+    SIGN_IN_REQUIRED: entry({
+        status: 401,
+        retryable: false,
+        title: "Sign in required",
+        message: "Sign in with your TMDB account to save favorites.",
+    }),
+    SESSION_EXPIRED: entry({
+        status: 401,
+        retryable: false,
+        title: "Session expired",
+        message: "Please sign in again to keep using favorites.",
+    }),
+    SIGN_IN_FAILED: entry({
+        status: 401,
+        retryable: false,
+        title: "Sign-in didn't finish",
+        message: "We couldn't complete sign-in. Please try again.",
     }),
 });
 

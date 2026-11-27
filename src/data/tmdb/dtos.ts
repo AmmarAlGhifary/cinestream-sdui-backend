@@ -21,3 +21,22 @@ export interface TmdbMovieDetail extends TmdbMovie {
 export interface TmdbMoviePage {
     results: TmdbMovie[];
 }
+
+export interface TmdbRequestToken {
+    request_token: string;
+    /** For example `2016-08-26 17:04:39 UTC`. */
+    expires_at: string;
+}
+
+export interface TmdbSession {
+    session_id: string;
+}
+
+export interface TmdbAccount {
+    id: number;
+    username: string;
+}
+
+export interface TmdbAccountStates {
+    favorite: boolean;
+}

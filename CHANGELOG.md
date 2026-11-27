@@ -20,6 +20,14 @@ body root type the Android client does not support yet) is a major version.
 - Maintenance mode: with `MAINTENANCE_MODE=true`, screen endpoints return 503 `MAINTENANCE` without
   calling TMDB. `/api/index` stays up and reports `maintenance`.
 - Rewrites `/movie_list_screen` and `/search`.
+- Sign-in with a TMDB account: `POST /api/auth/request_token`, `POST /api/auth/session` and
+  `DELETE /api/auth/session`. The redirect after approval is `AUTH_REDIRECT_URL`
+  (default `cinestream://auth/tmdb`).
+- `POST /api/favorite` adds a movie to, or removes it from, the signed-in user's favorites.
+- The detail screen shows the favorite state when sent `Authorization: Bearer <session_id>`, and adds
+  `X-Session-Invalid: true` when the session is rejected. The favorite button's action body now has a
+  `favorite` field.
+- Error codes `SIGN_IN_REQUIRED`, `SESSION_EXPIRED` and `SIGN_IN_FAILED`.
 
 ### Changed
 

@@ -233,6 +233,7 @@ exports[`GET /api/movie_detail_screen > returns the detail screen 1`] = `
       {
         "action": {
           "body": {
+            "favorite": true,
             "movie_id": "42",
           },
           "endpoint": "/api/favorite",

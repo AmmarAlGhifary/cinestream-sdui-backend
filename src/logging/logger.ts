@@ -1,10 +1,13 @@
+import { redactSecrets, redactingReplacer } from './redact';
+
 type LogLevel = 'debug' | 'info' | 'warn' | 'error';
 
 class Logger {
     private formatMessage(level: LogLevel, message: string, data?: unknown): string {
         const timestamp = new Date().toISOString();
-        const dataStr = data ? ` | Data: ${JSON.stringify(data)}` : '';
-        return `[${timestamp}] [${level.toUpperCase()}] ${message}${dataStr}`;
+        const dataStr = data ? ` | Data: ${JSON.stringify(data, redactingReplacer)}` : '';
+        // Every line is redacted here, so callers cannot forget to.
+        return `[${timestamp}] [${level.toUpperCase()}] ${redactSecrets(message)}${dataStr}`;
     }
 
     info(message: string, data?: unknown) {

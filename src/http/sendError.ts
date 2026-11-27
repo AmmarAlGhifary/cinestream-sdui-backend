@@ -1,14 +1,15 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { ERROR_CATALOG, type ErrorCode } from '../errors/appError';
 
-export const ALLOWED_METHODS = ["GET", "HEAD"];
+/** What an endpoint accepts unless it says otherwise. */
+export const DEFAULT_METHODS: readonly string[] = ["GET", "HEAD"];
 
 /** Write the error envelope, with its status and headers, for `code`. */
 export function sendError(
     res: VercelResponse,
     req: VercelRequest,
     code: ErrorCode,
-    { retryAfter }: { retryAfter?: number } = {},
+    { retryAfter, allow = DEFAULT_METHODS }: { retryAfter?: number; allow?: readonly string[] } = {},
 ) {
     const spec = ERROR_CATALOG[code];
     const requestId = req.headers["x-vercel-id"];
@@ -20,7 +21,7 @@ export function sendError(
         res.setHeader("Retry-After", String(retrySeconds));
     }
     if (code === "METHOD_NOT_ALLOWED") {
-        res.setHeader("Allow", ALLOWED_METHODS.join(", "));
+        res.setHeader("Allow", allow.join(", "));
     }
 
     return res.status(spec.status).json({

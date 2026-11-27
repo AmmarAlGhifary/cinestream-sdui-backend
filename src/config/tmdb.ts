@@ -3,6 +3,9 @@ import { AppError } from '../errors/appError';
 /** The only place TMDB connection settings are defined. */
 export const TMDB_BASE_URL = "https://api.themoviedb.org/3";
 
+/** The TMDB website, where a user approves a sign-in request. */
+export const TMDB_WEB_BASE_URL = "https://www.themoviedb.org";
+
 export const TMDB_IMAGE_BASE_URL = "https://image.tmdb.org/t/p";
 
 export const TMDB_IMAGE_SIZES = {
