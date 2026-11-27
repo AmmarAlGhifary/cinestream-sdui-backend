@@ -41,23 +41,23 @@ A `HEAD` request gets the same status and headers as the equivalent `GET`, inclu
 
 A `-` in the `Retry-After` column means the header is not listed for that code.
 
-| Code                    | Status | Retryable | Retry-After           | Title                 | Message                                                             | When it happens                                                                                                     |
-| :---------------------- | :----- | :-------- | :-------------------- | :-------------------- | :------------------------------------------------------------------ | :------------------------------------------------------------------------------------------------------------------ |
-| `MISSING_PARAMETER`     | 400    | false     | -                     | Something's missing   | We couldn't open this page because some information is missing.     | A required parameter is absent or empty: `movie_id`, or a `favorite` or `request_token` body value                  |
-| `INVALID_PARAMETER`     | 400    | false     | -                     | Invalid request       | We couldn't open this page. Please go back and try again.           | An invalid `movie_id`, `favorite`, `request_token` or body; an unknown or missing `list_type`; a bad search `query` |
-| `METHOD_NOT_ALLOWED`    | 405    | false     | -                     | Not supported         | This action isn't supported.                                        | A method the endpoint doesn't accept (see [Methods](#methods))                                                      |
-| `SCREEN_NOT_FOUND`      | 404    | false     | -                     | Page not found        | This page doesn't exist or has moved.                               | Unknown path                                                                                                        |
-| `MOVIE_NOT_FOUND`       | 404    | false     | -                     | Movie not found       | We couldn't find this movie. It may have been removed.              | TMDB returns 404 for the movie on the detail screen, the similar list or a favorite                                 |
-| `CONTENT_UNAVAILABLE`   | 503    | true      | 30                    | Nothing to show yet   | We couldn't load movies right now. Please try again in a moment.    | Home has no trending movies                                                                                         |
-| `RATE_LIMITED`          | 429    | true      | TMDB's value, else 10 | Too many requests     | We're getting a lot of requests. Please try again in a few seconds. | TMDB returns 429                                                                                                    |
-| `UPSTREAM_TIMEOUT`      | 504    | true      | -                     | Taking too long       | The movie service is slow to respond. Please try again.             | TMDB takes longer than 8 s                                                                                          |
-| `UPSTREAM_ERROR`        | 502    | true      | -                     | Service problem       | We couldn't reach the movie service. Please try again.              | TMDB 5xx, other unexpected TMDB errors, network failure, or a malformed TMDB response                               |
-| `SERVICE_MISCONFIGURED` | 503    | false     | -                     | Service unavailable   | CineStream is temporarily unavailable. We're working on it.         | `TMDB_API_KEY` is unset, or TMDB rejects our key (401 or 403)                                                       |
-| `MAINTENANCE`           | 503    | true      | 300                   | Under maintenance     | CineStream is being updated. Please check back soon.                | `MAINTENANCE_MODE=true` (the index health check stays 200 and reports maintenance)                                  |
-| `INTERNAL_ERROR`        | 500    | true      | -                     | Something went wrong  | An unexpected error occurred. Please try again.                     | Any other unexpected error                                                                                          |
-| `SIGN_IN_REQUIRED`      | 401    | false     | -                     | Sign in required      | Sign in with your TMDB account to save favorites.                   | No bearer session on `POST /api/favorite` or `DELETE /api/auth/session`                                             |
-| `SESSION_EXPIRED`       | 401    | false     | -                     | Session expired       | Please sign in again to keep using favorites.                       | The session is malformed, or TMDB rejects it                                                                        |
-| `SIGN_IN_FAILED`        | 401    | false     | -                     | Sign-in didn't finish | We couldn't complete sign-in. Please try again.                     | TMDB rejects the request token: not approved, expired or invalid                                                    |
+| Code                    | Status | Retryable | Retry-After           | Title                 | Message                                                             | When it happens                                                                                                                       |
+| :---------------------- | :----- | :-------- | :-------------------- | :-------------------- | :------------------------------------------------------------------ | :------------------------------------------------------------------------------------------------------------------------------------ |
+| `MISSING_PARAMETER`     | 400    | false     | -                     | Something's missing   | We couldn't open this page because some information is missing.     | A required parameter is absent or empty: `movie_id`, or a `favorite`, `request_token` or `sign_in_secret` body value                  |
+| `INVALID_PARAMETER`     | 400    | false     | -                     | Invalid request       | We couldn't open this page. Please go back and try again.           | An invalid `movie_id`, `favorite`, `request_token`, `sign_in_secret` or body; an unknown or missing `list_type`; a bad search `query` |
+| `METHOD_NOT_ALLOWED`    | 405    | false     | -                     | Not supported         | This action isn't supported.                                        | A method the endpoint doesn't accept (see [Methods](#methods))                                                                        |
+| `SCREEN_NOT_FOUND`      | 404    | false     | -                     | Page not found        | This page doesn't exist or has moved.                               | Unknown path                                                                                                                          |
+| `MOVIE_NOT_FOUND`       | 404    | false     | -                     | Movie not found       | We couldn't find this movie. It may have been removed.              | TMDB returns 404 for the movie on the detail screen, the similar list or a favorite                                                   |
+| `CONTENT_UNAVAILABLE`   | 503    | true      | 30                    | Nothing to show yet   | We couldn't load movies right now. Please try again in a moment.    | Home has no trending movies                                                                                                           |
+| `RATE_LIMITED`          | 429    | true      | TMDB's value, else 10 | Too many requests     | We're getting a lot of requests. Please try again in a few seconds. | TMDB returns 429                                                                                                                      |
+| `UPSTREAM_TIMEOUT`      | 504    | true      | -                     | Taking too long       | The movie service is slow to respond. Please try again.             | TMDB takes longer than 8 s                                                                                                            |
+| `UPSTREAM_ERROR`        | 502    | true      | -                     | Service problem       | We couldn't reach the movie service. Please try again.              | TMDB 5xx, other unexpected TMDB errors, network failure, or a malformed TMDB response                                                 |
+| `SERVICE_MISCONFIGURED` | 503    | false     | -                     | Service unavailable   | CineStream is temporarily unavailable. We're working on it.         | `TMDB_API_KEY` is unset, or TMDB rejects our key (401 or 403); `AUTH_SIGNING_SECRET` is unset when signing in                         |
+| `MAINTENANCE`           | 503    | true      | 300                   | Under maintenance     | CineStream is being updated. Please check back soon.                | `MAINTENANCE_MODE=true` (the index health check stays 200 and reports maintenance)                                                    |
+| `INTERNAL_ERROR`        | 500    | true      | -                     | Something went wrong  | An unexpected error occurred. Please try again.                     | Any other unexpected error                                                                                                            |
+| `SIGN_IN_REQUIRED`      | 401    | false     | -                     | Sign in required      | Sign in with your TMDB account to save favorites.                   | No bearer session on `POST /api/favorite` or `DELETE /api/auth/session`                                                               |
+| `SESSION_EXPIRED`       | 401    | false     | -                     | Session expired       | Please sign in again to keep using favorites.                       | The session is malformed, or TMDB rejects it                                                                                          |
+| `SIGN_IN_FAILED`        | 401    | false     | -                     | Sign-in didn't finish | We couldn't complete sign-in. Please try again.                     | `sign_in_secret` doesn't match the request token, or TMDB rejects the token or the account                                            |
 
 ## Methods
 
@@ -77,9 +77,9 @@ A valid `movie_id` is a single positive integer of 1 to 10 digits without a lead
 - An absent or empty `movie_id` returns `MISSING_PARAMETER`.
 - Anything else that doesn't match returns `INVALID_PARAMETER`, including an array, `0`, a leading zero, a negative number, a decimal, spaces or any other character.
 
-In a JSON body, `movie_id` follows the same rule and must be a string, and `favorite` must be a boolean (`true` or `false`, not a string or a number). `request_token` must be a string of at most 256 characters.
+In a JSON body, `movie_id` follows the same rule and must be a string, and `favorite` must be a boolean (`true` or `false`, not a string or a number). `request_token` must be a string of at most 256 characters, and `sign_in_secret` a string.
 
-- An absent, `null` or empty `movie_id` or `request_token`, and an absent or `null` `favorite`, return `MISSING_PARAMETER`.
+- An absent, `null` or empty `movie_id`, `request_token` or `sign_in_secret`, and an absent or `null` `favorite`, return `MISSING_PARAMETER`.
 - Any other value that breaks these rules returns `INVALID_PARAMETER`, and so does a body that is malformed JSON or not a JSON object. Send `Content-Type: application/json`.
 
 ## Precedence
@@ -98,6 +98,12 @@ When several errors apply, the first one in this list is returned:
 With `MAINTENANCE_MODE=true`, a request to a screen, favorite or auth endpoint returns `MAINTENANCE` before any validation or TMDB call.
 
 The index health check stays 200. Its body has a `maintenance` field, `true` during maintenance and `false` otherwise.
+
+## Signing in
+
+`POST /api/auth/request_token` returns a `sign_in_secret` with the token, and `POST /api/auth/session` requires both. This binds the session exchange to the client that started the sign-in.
+
+A wrong secret returns `SIGN_IN_FAILED` without any TMDB call. If `AUTH_SIGNING_SECRET` is unset, both of these requests return `SERVICE_MISCONFIGURED`; signing out still works.
 
 ## Signed-in requests
 

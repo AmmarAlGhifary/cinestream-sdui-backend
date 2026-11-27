@@ -89,19 +89,21 @@ All serverless functions live in `/api` and conform to polymorphic `SduiScreen` 
 
 These endpoints take and return JSON, not screens.
 
-| Method   | Endpoint                  | Input                                                   | Success response                                     |
-| :------- | :------------------------ | :------------------------------------------------------ | :--------------------------------------------------- |
-| `POST`   | `/api/auth/request_token` | None                                                    | 200 `{"request_token", "expires_at", "approve_url"}` |
-| `POST`   | `/api/auth/session`       | Body `{"request_token"}`                                | 200 `{"session_id", "account": {"id", "username"}}`  |
-| `DELETE` | `/api/auth/session`       | `Authorization` header                                  | 204, no body                                         |
-| `POST`   | `/api/favorite`           | `Authorization` header, body `{"movie_id", "favorite"}` | 200 `{"movie_id", "is_favorite", "icon_button"}`     |
+| Method   | Endpoint                  | Input                                                   | Success response                                                       |
+| :------- | :------------------------ | :------------------------------------------------------ | :--------------------------------------------------------------------- |
+| `POST`   | `/api/auth/request_token` | None                                                    | 200 `{"request_token", "expires_at", "approve_url", "sign_in_secret"}` |
+| `POST`   | `/api/auth/session`       | Body `{"request_token", "sign_in_secret"}`              | 200 `{"session_id", "account": {"id", "username"}}`                    |
+| `DELETE` | `/api/auth/session`       | `Authorization` header                                  | 204, no body                                                           |
+| `POST`   | `/api/favorite`           | `Authorization` header, body `{"movie_id", "favorite"}` | 200 `{"movie_id", "is_favorite", "icon_button"}`                       |
 
 To sign in with a TMDB account:
 
-1. Call `POST /api/auth/request_token` and open `approve_url` in a browser.
+1. Call `POST /api/auth/request_token`, keep `sign_in_secret` inside the app, and open `approve_url` in a browser.
 2. The user approves, and TMDB sends them to the deep link (`AUTH_REDIRECT_URL`, default `cinestream://auth/tmdb`).
-3. Call `POST /api/auth/session` with the same `request_token`.
+3. Call `POST /api/auth/session` with the same `request_token` and its `sign_in_secret`.
 4. Send `Authorization: Bearer <session_id>` with later requests.
+
+`sign_in_secret` binds the session exchange to the client that started the sign-in, so another app that catches the redirect can't finish it here.
 
 `expires_at` is an ISO 8601 UTC time, such as `2026-11-27T08:00:00.000Z`. If TMDB's value can't be read, it is passed through unchanged.
 
@@ -192,6 +194,8 @@ Every screen endpoint returns a polymorphic `screen` object consisting of a `too
    ```bash
     TMDB_API_KEY=<your key>
    ```
+   Signing in also needs `AUTH_SIGNING_SECRET`, a long random value (for example from `openssl rand -base64 32`). Without it, the sign-in endpoints return 503 `SERVICE_MISCONFIGURED`.
+
    Optionally set `AUTH_REDIRECT_URL` to change where TMDB sends the user after they approve a sign-in.
 
    Use `.env`, not `.env.local`: the local dev server did not load `.env.local` when tested with Vercel CLI 54.15.1. `.env` is gitignored; never commit it. Without the key, requests that need TMDB return 503 `SERVICE_MISCONFIGURED`.

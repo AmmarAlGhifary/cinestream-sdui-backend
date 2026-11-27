@@ -11,6 +11,7 @@ import notFound from '../api/not_found';
 import search from '../api/search';
 import { ERROR_CATALOG, type ErrorCode } from '../src/errors/appError';
 import { errorBody } from './helpers/errors';
+import { SIGN_IN_BODY, SIGNING_KEY } from './helpers/account';
 import { fakeTmdb, tmdbError } from './helpers/axiosMock';
 import { invoke, type Handler } from './helpers/http';
 import { movie, movieDetail, similar, trending, upcoming } from './fixtures/movies';
@@ -76,8 +77,11 @@ const SCENARIOS: Record<ErrorCode, Scenario> = {
     SIGN_IN_FAILED: {
         handler: session,
         method: 'POST',
-        body: { request_token: 'unapproved-token' },
-        arrange: () => fakeTmdb.respond({ '/authentication/session/new': tmdbError(401, 17) }),
+        body: SIGN_IN_BODY,
+        arrange: () => {
+            vi.stubEnv('AUTH_SIGNING_SECRET', SIGNING_KEY);
+            fakeTmdb.respond({ '/authentication/session/new': tmdbError(401, 17) });
+        },
     },
 };
 

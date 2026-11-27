@@ -23,6 +23,9 @@ body root type the Android client does not support yet) is a major version.
 - Sign-in with a TMDB account: `POST /api/auth/request_token`, `POST /api/auth/session` and
   `DELETE /api/auth/session`. The redirect after approval is `AUTH_REDIRECT_URL`
   (default `cinestream://auth/tmdb`).
+- A `sign_in_secret`, issued with the request token and required to create the session, binds the
+  session exchange to the client that started the sign-in. It needs the `AUTH_SIGNING_SECRET`
+  environment variable.
 - `POST /api/favorite` adds a movie to, or removes it from, the signed-in user's favorites.
 - The detail screen shows the favorite state when sent `Authorization: Bearer <session_id>`, and adds
   `X-Session-Invalid: true` when the session is rejected. The favorite button's action body now has a

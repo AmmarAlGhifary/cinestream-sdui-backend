@@ -1,16 +1,36 @@
+import { createHmac } from 'node:crypto';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import requestTokenHandler from '../api/auth/request_token';
 import sessionHandler from '../api/auth/session';
 import type { ErrorCode } from '../src/errors/appError';
 import { ERROR_CATALOG } from '../src/errors/appError';
-import { account, newSession, requestToken, SESSION, SIGNED_IN, TOKEN } from './helpers/account';
+import {
+    account,
+    newSession,
+    requestToken,
+    SESSION,
+    SIGN_IN_BODY,
+    SIGN_IN_SECRET,
+    SIGNED_IN,
+    SIGNING_KEY,
+    TOKEN,
+} from './helpers/account';
 import { fakeTmdb, tmdbError } from './helpers/axiosMock';
 import { errorBody } from './helpers/errors';
 import { invoke } from './helpers/http';
 
 vi.mock('axios', () => import('./helpers/axiosMock'));
 
-beforeEach(() => fakeTmdb.reset());
+beforeEach(() => {
+    fakeTmdb.reset();
+    vi.stubEnv('AUTH_SIGNING_SECRET', SIGNING_KEY);
+});
+
+/** What a client sends after getting `token` from this service. */
+const bodyFor = (token: string) => ({
+    request_token: token,
+    sign_in_secret: createHmac('sha256', SIGNING_KEY).update(token).digest('base64url'),
+});
 
 const NO_STORE = { 'cache-control': 'private, no-store' };
 
@@ -26,7 +46,7 @@ describe('POST /api/auth/request_token', () => {
 
     beforeEach(() => fakeTmdb.respond({ '/authentication/token/new': requestToken }));
 
-    it('returns the token, its expiry and the approval URL with the default deep link', async () => {
+    it('returns the token, its expiry, its secret and the approval URL with the default deep link', async () => {
         const { status, body, headers } = await start();
 
         expect(status).toBe(200);
@@ -34,9 +54,42 @@ describe('POST /api/auth/request_token', () => {
             request_token: TOKEN,
             expires_at: '2026-11-27T15:00:00.000Z',
             approve_url: `https://www.themoviedb.org/authenticate/${TOKEN}?redirect_to=cinestream%3A%2F%2Fauth%2Ftmdb`,
+            sign_in_secret: SIGN_IN_SECRET,
         });
         expect(headers).toStrictEqual(NO_STORE);
         expect(fakeTmdb.calls()).toStrictEqual([{ method: 'GET', path: '/authentication/token/new', query: {} }]);
+    });
+
+    it('issues the same unpadded base64url secret for the same key and token', async () => {
+        const first = (await start()).body.sign_in_secret;
+        const second = (await start()).body.sign_in_secret;
+
+        expect(second).toBe(first);
+        expect(first).toMatch(/^[A-Za-z0-9_-]{43}$/);
+    });
+
+    it('issues a different secret for another token', async () => {
+        fakeTmdb.respond({ '/authentication/token/new': { ...requestToken, request_token: 'another-token' } });
+
+        const { body } = await start();
+
+        expect(body.sign_in_secret).toBe(bodyFor('another-token').sign_in_secret);
+        expect(body.sign_in_secret).not.toBe(SIGN_IN_SECRET);
+    });
+
+    it('issues a different secret under another key', async () => {
+        vi.stubEnv('AUTH_SIGNING_SECRET', 'another-key');
+
+        const { body } = await start();
+
+        expect(body.sign_in_secret).not.toBe(SIGN_IN_SECRET);
+    });
+
+    it.each(['', undefined])('fails closed without calling TMDB when the signing key is %j', async (key) => {
+        vi.stubEnv('AUTH_SIGNING_SECRET', key);
+
+        expectError(await start(), 'SERVICE_MISCONFIGURED');
+        expect(fakeTmdb.calls()).toEqual([]);
     });
 
     it.each([
@@ -108,7 +161,7 @@ describe('POST /api/auth/session', () => {
     it('returns the session and only the account id and username', async () => {
         fakeTmdb.respond(routes);
 
-        const { status, body, headers } = await signIn({ request_token: TOKEN });
+        const { status, body, headers } = await signIn(SIGN_IN_BODY);
 
         expect(status).toBe(200);
         expect(body).toStrictEqual({ session_id: SESSION, account: { id: 548, username: 'answerfan' } });
@@ -122,7 +175,7 @@ describe('POST /api/auth/session', () => {
     it('accepts a JSON body sent as text', async () => {
         fakeTmdb.respond(routes);
 
-        const { status } = await signIn(JSON.stringify({ request_token: TOKEN }));
+        const { status } = await signIn(JSON.stringify(SIGN_IN_BODY));
 
         expect(status).toBe(200);
     });
@@ -130,7 +183,7 @@ describe('POST /api/auth/session', () => {
     it('accepts a token of 256 characters', async () => {
         fakeTmdb.respond(routes);
 
-        const { status } = await signIn({ request_token: 'a'.repeat(256) });
+        const { status } = await signIn(bodyFor('a'.repeat(256)));
 
         expect(status).toBe(200);
     });
@@ -146,8 +199,35 @@ describe('POST /api/auth/session', () => {
         ['a numeric token', { request_token: 42 }, 'INVALID_PARAMETER'],
         ['an array token', { request_token: [TOKEN] }, 'INVALID_PARAMETER'],
         ['a token over 256 characters', { request_token: 'a'.repeat(257) }, 'INVALID_PARAMETER'],
+        ['no secret', { request_token: TOKEN }, 'MISSING_PARAMETER'],
+        ['a null secret', { ...SIGN_IN_BODY, sign_in_secret: null }, 'MISSING_PARAMETER'],
+        ['an empty secret', { ...SIGN_IN_BODY, sign_in_secret: '' }, 'MISSING_PARAMETER'],
+        ['a numeric secret', { ...SIGN_IN_BODY, sign_in_secret: 42 }, 'INVALID_PARAMETER'],
+        ['an array secret', { ...SIGN_IN_BODY, sign_in_secret: [SIGN_IN_SECRET] }, 'INVALID_PARAMETER'],
+        ['a wrong secret of the right length', { ...SIGN_IN_BODY, sign_in_secret: 'A'.repeat(43) }, 'SIGN_IN_FAILED'],
+        ['a secret changed in its last character', { ...SIGN_IN_BODY, sign_in_secret: `${SIGN_IN_SECRET.slice(0, -1)}9` }, 'SIGN_IN_FAILED'],
+        ['a truncated secret', { ...SIGN_IN_BODY, sign_in_secret: SIGN_IN_SECRET.slice(0, -1) }, 'SIGN_IN_FAILED'],
+        ['a padded secret', { ...SIGN_IN_BODY, sign_in_secret: `${SIGN_IN_SECRET}=` }, 'SIGN_IN_FAILED'],
+        ['a very long secret', { ...SIGN_IN_BODY, sign_in_secret: 'A'.repeat(5000) }, 'SIGN_IN_FAILED'],
+        ['43 characters that are more bytes', { ...SIGN_IN_BODY, sign_in_secret: 'é'.repeat(43) }, 'SIGN_IN_FAILED'],
+        ["another token's secret", { ...SIGN_IN_BODY, sign_in_secret: bodyFor('another-token').sign_in_secret }, 'SIGN_IN_FAILED'],
+        ['a secret used with another token', { ...SIGN_IN_BODY, request_token: 'another-token' }, 'SIGN_IN_FAILED'],
     ])('rejects %s without calling TMDB', async (_label, body, code) => {
         expectError(await signIn(body), code);
+        expect(fakeTmdb.calls()).toEqual([]);
+    });
+
+    it('rejects a secret signed with another key without calling TMDB', async () => {
+        vi.stubEnv('AUTH_SIGNING_SECRET', 'rotated-key');
+
+        expectError(await signIn(SIGN_IN_BODY), 'SIGN_IN_FAILED');
+        expect(fakeTmdb.calls()).toEqual([]);
+    });
+
+    it.each(['', undefined])('fails closed without calling TMDB when the signing key is %j', async (key) => {
+        vi.stubEnv('AUTH_SIGNING_SECRET', key);
+
+        expectError(await signIn(SIGN_IN_BODY), 'SERVICE_MISCONFIGURED');
         expect(fakeTmdb.calls()).toEqual([]);
     });
 
@@ -169,7 +249,7 @@ describe('POST /api/auth/session', () => {
     ])('returns SIGN_IN_FAILED for TMDB %i with status_code %i', async (status, statusCode) => {
         fakeTmdb.respond({ '/authentication/session/new': tmdbError(status, statusCode) });
 
-        expectError(await signIn({ request_token: TOKEN }), 'SIGN_IN_FAILED');
+        expectError(await signIn(SIGN_IN_BODY), 'SIGN_IN_FAILED');
         expect(fakeTmdb.calls()).toHaveLength(1);
     });
 
@@ -184,12 +264,12 @@ describe('POST /api/auth/session', () => {
     ])('maps %s', async (_label, tmdbRoutes, code) => {
         fakeTmdb.respond(tmdbRoutes);
 
-        expectError(await signIn({ request_token: TOKEN }), code);
+        expectError(await signIn(SIGN_IN_BODY), code);
     });
 });
 
 describe('POST /api/auth/session when the account lookup fails', () => {
-    const signIn = () => invoke(sessionHandler, {}, '/', { method: 'POST', body: { request_token: TOKEN } });
+    const signIn = () => invoke(sessionHandler, {}, '/', { method: 'POST', body: SIGN_IN_BODY });
 
     const created = { '/authentication/session/new': newSession };
     const deletion = { method: 'DELETE', path: '/authentication/session', query: {}, body: { session_id: SESSION } };
@@ -242,6 +322,13 @@ describe('POST /api/auth/session when the account lookup fails', () => {
 describe('DELETE /api/auth/session', () => {
     const signOut = (headers: Record<string, string> = SIGNED_IN) =>
         invoke(sessionHandler, {}, '/', { method: 'DELETE', headers });
+
+    it('signs out without the signing key', async () => {
+        vi.stubEnv('AUTH_SIGNING_SECRET', '');
+        fakeTmdb.respond({ '/authentication/session': { success: true } });
+
+        expect((await signOut()).status).toBe(204);
+    });
 
     it('deletes the TMDB session and answers 204 without a body', async () => {
         fakeTmdb.respond({ '/authentication/session': { success: true } });

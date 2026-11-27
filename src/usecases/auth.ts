@@ -1,7 +1,8 @@
 import { createRequestToken, createSession, deleteSession, getAccount } from '../data/tmdb/accountRepository';
-import { getAuthRedirectUrl } from '../config/auth';
+import { getAuthRedirectUrl, getAuthSigningSecret } from '../config/auth';
 import { TMDB_WEB_BASE_URL } from '../config/tmdb';
 import { logger } from '../logging/logger';
+import { signInSecretFor, verifySignInSecret } from './signInSecret';
 
 /** TMDB writes timestamps as `2026-11-27 08:00:00 UTC`. */
 const TMDB_TIMESTAMP = /^(\d{4}-\d{2}-\d{2}) (\d{2}:\d{2}:\d{2}) UTC$/;
@@ -21,8 +22,10 @@ function toIsoTimestamp(value: string): string {
     return value;
 }
 
-/** Start a sign-in: a request token and the page where the user approves it. */
+/** Start a sign-in: a request token, its secret and the page where the user approves it. */
 export async function startSignIn() {
+    // Read first, so a missing key fails before TMDB issues a token.
+    const signingKey = getAuthSigningSecret();
     const { request_token, expires_at } = await createRequestToken();
     const redirectTo = encodeURIComponent(getAuthRedirectUrl());
 
@@ -31,6 +34,7 @@ export async function startSignIn() {
         request_token,
         expires_at: toIsoTimestamp(expires_at),
         approve_url: `${TMDB_WEB_BASE_URL}/authenticate/${encodeURIComponent(request_token)}?redirect_to=${redirectTo}`,
+        sign_in_secret: signInSecretFor(request_token, signingKey),
     };
 }
 
@@ -53,7 +57,8 @@ async function getNewAccount(sessionId: string) {
 }
 
 /** Finish a sign-in with an approved request token. The session is not stored. */
-export async function signIn(requestToken: string) {
+export async function signIn(requestToken: string, signInSecret: string) {
+    verifySignInSecret(requestToken, signInSecret);
     const sessionId = await createSession(requestToken);
     const { id, username } = await getNewAccount(sessionId);
 

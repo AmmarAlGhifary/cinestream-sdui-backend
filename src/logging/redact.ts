@@ -1,9 +1,9 @@
 /** Names whose values are credentials, as query parameters or object keys. */
-const SECRET_NAME = /^(api_key|session_id|request_token|authorization)$/i;
+const SECRET_NAME = /^(api_key|session_id|request_token|sign_in_secret|authorization)$/i;
 
 const SECRET_IN_TEXT: RegExp[] = [
     // Query parameters in a URL or message.
-    /([?&](?:api_key|session_id|request_token)=)[^&\s"'\\]+/gi,
+    /([?&](?:api_key|session_id|request_token|sign_in_secret)=)[^&\s"'\\]+/gi,
     // An Authorization header value.
     /(\bBearer\s+)[^\s"',}\\]+/gi,
     // The request token inside a TMDB approval URL.

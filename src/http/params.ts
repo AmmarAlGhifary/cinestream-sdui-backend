@@ -68,3 +68,14 @@ export function parseRequestToken(value: unknown): string {
     }
     return value;
 }
+
+/** Only presence and type are checked here; the use case verifies the value. */
+export function parseSignInSecret(value: unknown): string {
+    if (value === undefined || value === null || value === "") {
+        throw new AppError("MISSING_PARAMETER", { detail: "Missing sign_in_secret parameter" });
+    }
+    if (typeof value !== "string") {
+        throw new AppError("INVALID_PARAMETER", { detail: "Invalid sign_in_secret parameter" });
+    }
+    return value;
+}
