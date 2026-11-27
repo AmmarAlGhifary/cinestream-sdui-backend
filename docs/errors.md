@@ -4,7 +4,7 @@ How the CineStream backend reports errors, and how a client should handle them. 
 
 ## Error envelope
 
-Every non-2xx response from our code has this body:
+Every non-2xx response to a `GET` from our code carries this body, and so does a `METHOD_NOT_ALLOWED` response:
 
 ```json
 {
@@ -35,6 +35,8 @@ Response headers:
 | `Retry-After`   | Seconds            | Where the [Error codes](#error-codes) table lists a value. |
 | `Allow`         | `GET, HEAD`        | With `METHOD_NOT_ALLOWED`.                                 |
 
+A `HEAD` request gets the same status and headers as the equivalent `GET`, including `Retry-After` and `Allow`, but no body.
+
 ## Error codes
 
 A `-` in the `Retry-After` column means the header is not listed for that code.
@@ -53,6 +55,29 @@ A `-` in the `Retry-After` column means the header is not listed for that code.
 | `SERVICE_MISCONFIGURED` | 503    | false     | -                     | Service unavailable  | CineStream is temporarily unavailable. We're working on it.         | `TMDB_API_KEY` is unset, or TMDB rejects our key (401 or 403)                                                      |
 | `MAINTENANCE`           | 503    | true      | 300                   | Under maintenance    | CineStream is being updated. Please check back soon.                | `MAINTENANCE_MODE=true` (the index health check stays 200 and reports maintenance)                                 |
 | `INTERNAL_ERROR`        | 500    | true      | -                     | Something went wrong | An unexpected error occurred. Please try again.                     | Any other unexpected error                                                                                         |
+
+## Parameter rules
+
+A valid `movie_id` is a single positive integer of 1 to 10 digits without a leading zero: `^[1-9][0-9]{0,9}$`.
+
+- An absent or empty `movie_id` returns `MISSING_PARAMETER`.
+- Anything else that doesn't match returns `INVALID_PARAMETER`, including an array, `0`, a leading zero, a negative number, a decimal, spaces or any other character.
+
+## Precedence
+
+When several errors apply, the first one in this list is returned:
+
+1. `METHOD_NOT_ALLOWED` (405)
+2. `SCREEN_NOT_FOUND` (404)
+3. `MAINTENANCE` (503)
+4. Parameter errors (400): `MISSING_PARAMETER` and `INVALID_PARAMETER`
+5. Everything else
+
+## Maintenance mode
+
+With `MAINTENANCE_MODE=true`, a `GET` to a real screen returns `MAINTENANCE` before any parameter validation or TMDB call.
+
+The index health check stays 200. Its body has a `maintenance` field, `true` during maintenance and `false` otherwise.
 
 ## Not errors
 
