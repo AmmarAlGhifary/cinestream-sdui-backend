@@ -1,0 +1,431 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`GET /api/home > returns the home screen 1`] = `
+{
+  "body": {
+    "children": [
+      {
+        "buttons": [
+          {
+            "action": {
+              "destination": "movie_detail_screen",
+              "params": {
+                "movie_id": "100",
+              },
+              "type": "navigation_action",
+            },
+            "style": "primary",
+            "text": "View Details",
+            "type": "button",
+          },
+        ],
+        "description": {
+          "text_content": "Overview of movie 100.",
+          "type": "text",
+        },
+        "image_url": "https://image.tmdb.org/t/p/w780/backdrop-100.jpg",
+        "title": {
+          "title": {
+            "text_content": "Movie 100",
+            "type": "text",
+          },
+          "type": "section_header",
+        },
+        "type": "featured_hero",
+      },
+      {
+        "action_button": {
+          "action": {
+            "destination": "movie_list_screen",
+            "params": {
+              "list_type": "trending",
+            },
+            "type": "navigation_action",
+          },
+          "text": "See All",
+          "type": "text_button",
+        },
+        "title": {
+          "text_content": "This Week!",
+          "type": "text",
+        },
+        "type": "section_header",
+      },
+      {
+        "carousel_id": "trending_carousel",
+        "item_type": "movie_card",
+        "items": [
+          {
+            "action": {
+              "destination": "movie_detail_screen",
+              "params": {
+                "movie_id": "101",
+              },
+              "type": "navigation_action",
+            },
+            "movie_id": "101",
+            "poster_url": "https://image.tmdb.org/t/p/w500/poster-101.jpg",
+            "title": {
+              "text_content": "Named Only",
+              "type": "text",
+            },
+            "type": "movie_card",
+          },
+          {
+            "action": {
+              "destination": "movie_detail_screen",
+              "params": {
+                "movie_id": "102",
+              },
+              "type": "navigation_action",
+            },
+            "movie_id": "102",
+            "poster_url": "https://image.tmdb.org/t/p/w500null",
+            "title": {
+              "text_content": "Movie 102",
+              "type": "text",
+            },
+            "type": "movie_card",
+          },
+          {
+            "action": {
+              "destination": "movie_detail_screen",
+              "params": {
+                "movie_id": "103",
+              },
+              "type": "navigation_action",
+            },
+            "movie_id": "103",
+            "poster_url": "https://image.tmdb.org/t/p/w500/poster-103.jpg",
+            "title": {
+              "text_content": "Movie 103",
+              "type": "text",
+            },
+            "type": "movie_card",
+          },
+          {
+            "action": {
+              "destination": "movie_detail_screen",
+              "params": {
+                "movie_id": "104",
+              },
+              "type": "navigation_action",
+            },
+            "movie_id": "104",
+            "poster_url": "https://image.tmdb.org/t/p/w500/poster-104.jpg",
+            "title": {
+              "text_content": "Movie 104",
+              "type": "text",
+            },
+            "type": "movie_card",
+          },
+          {
+            "action": {
+              "destination": "movie_detail_screen",
+              "params": {
+                "movie_id": "105",
+              },
+              "type": "navigation_action",
+            },
+            "movie_id": "105",
+            "poster_url": "https://image.tmdb.org/t/p/w500/poster-105.jpg",
+            "title": {
+              "text_content": "Movie 105",
+              "type": "text",
+            },
+            "type": "movie_card",
+          },
+          {
+            "action": {
+              "destination": "movie_detail_screen",
+              "params": {
+                "movie_id": "106",
+              },
+              "type": "navigation_action",
+            },
+            "movie_id": "106",
+            "poster_url": "https://image.tmdb.org/t/p/w500/poster-106.jpg",
+            "title": {
+              "text_content": "Movie 106",
+              "type": "text",
+            },
+            "type": "movie_card",
+          },
+          {
+            "action": {
+              "destination": "movie_detail_screen",
+              "params": {
+                "movie_id": "107",
+              },
+              "type": "navigation_action",
+            },
+            "movie_id": "107",
+            "poster_url": "https://image.tmdb.org/t/p/w500/poster-107.jpg",
+            "title": {
+              "text_content": "Movie 107",
+              "type": "text",
+            },
+            "type": "movie_card",
+          },
+          {
+            "action": {
+              "destination": "movie_detail_screen",
+              "params": {
+                "movie_id": "108",
+              },
+              "type": "navigation_action",
+            },
+            "movie_id": "108",
+            "poster_url": "https://image.tmdb.org/t/p/w500/poster-108.jpg",
+            "title": {
+              "text_content": "Movie 108",
+              "type": "text",
+            },
+            "type": "movie_card",
+          },
+          {
+            "action": {
+              "destination": "movie_detail_screen",
+              "params": {
+                "movie_id": "109",
+              },
+              "type": "navigation_action",
+            },
+            "movie_id": "109",
+            "poster_url": "https://image.tmdb.org/t/p/w500/poster-109.jpg",
+            "title": {
+              "text_content": "Movie 109",
+              "type": "text",
+            },
+            "type": "movie_card",
+          },
+          {
+            "action": {
+              "destination": "movie_detail_screen",
+              "params": {
+                "movie_id": "110",
+              },
+              "type": "navigation_action",
+            },
+            "movie_id": "110",
+            "poster_url": "https://image.tmdb.org/t/p/w500/poster-110.jpg",
+            "title": {
+              "text_content": "Movie 110",
+              "type": "text",
+            },
+            "type": "movie_card",
+          },
+        ],
+        "type": "movie_carousel",
+      },
+      {
+        "action_button": {
+          "action": {
+            "destination": "movie_list_screen",
+            "params": {
+              "list_type": "upcoming",
+            },
+            "type": "navigation_action",
+          },
+          "text": "See All",
+          "type": "text_button",
+        },
+        "title": {
+          "text_content": "Coming Soon",
+          "type": "text",
+        },
+        "type": "section_header",
+      },
+      {
+        "carousel_id": "upcoming_carousel",
+        "item_type": "movie_card",
+        "items": [
+          {
+            "action": {
+              "destination": "movie_detail_screen",
+              "params": {
+                "movie_id": "200",
+              },
+              "type": "navigation_action",
+            },
+            "movie_id": "200",
+            "poster_url": "https://image.tmdb.org/t/p/w500/poster-200.jpg",
+            "title": {
+              "text_content": "Movie 200",
+              "type": "text",
+            },
+            "type": "movie_card",
+          },
+          {
+            "action": {
+              "destination": "movie_detail_screen",
+              "params": {
+                "movie_id": "201",
+              },
+              "type": "navigation_action",
+            },
+            "movie_id": "201",
+            "poster_url": "https://image.tmdb.org/t/p/w500/poster-201.jpg",
+            "title": {
+              "text_content": "Movie 201",
+              "type": "text",
+            },
+            "type": "movie_card",
+          },
+          {
+            "action": {
+              "destination": "movie_detail_screen",
+              "params": {
+                "movie_id": "202",
+              },
+              "type": "navigation_action",
+            },
+            "movie_id": "202",
+            "poster_url": "https://image.tmdb.org/t/p/w500/poster-202.jpg",
+            "title": {
+              "text_content": "Movie 202",
+              "type": "text",
+            },
+            "type": "movie_card",
+          },
+          {
+            "action": {
+              "destination": "movie_detail_screen",
+              "params": {
+                "movie_id": "203",
+              },
+              "type": "navigation_action",
+            },
+            "movie_id": "203",
+            "poster_url": "https://image.tmdb.org/t/p/w500/poster-203.jpg",
+            "title": {
+              "text_content": "Movie 203",
+              "type": "text",
+            },
+            "type": "movie_card",
+          },
+          {
+            "action": {
+              "destination": "movie_detail_screen",
+              "params": {
+                "movie_id": "204",
+              },
+              "type": "navigation_action",
+            },
+            "movie_id": "204",
+            "poster_url": "https://image.tmdb.org/t/p/w500/poster-204.jpg",
+            "title": {
+              "text_content": "Movie 204",
+              "type": "text",
+            },
+            "type": "movie_card",
+          },
+          {
+            "action": {
+              "destination": "movie_detail_screen",
+              "params": {
+                "movie_id": "205",
+              },
+              "type": "navigation_action",
+            },
+            "movie_id": "205",
+            "poster_url": "https://image.tmdb.org/t/p/w500/poster-205.jpg",
+            "title": {
+              "text_content": "Movie 205",
+              "type": "text",
+            },
+            "type": "movie_card",
+          },
+          {
+            "action": {
+              "destination": "movie_detail_screen",
+              "params": {
+                "movie_id": "206",
+              },
+              "type": "navigation_action",
+            },
+            "movie_id": "206",
+            "poster_url": "https://image.tmdb.org/t/p/w500/poster-206.jpg",
+            "title": {
+              "text_content": "Movie 206",
+              "type": "text",
+            },
+            "type": "movie_card",
+          },
+          {
+            "action": {
+              "destination": "movie_detail_screen",
+              "params": {
+                "movie_id": "207",
+              },
+              "type": "navigation_action",
+            },
+            "movie_id": "207",
+            "poster_url": "https://image.tmdb.org/t/p/w500/poster-207.jpg",
+            "title": {
+              "text_content": "Movie 207",
+              "type": "text",
+            },
+            "type": "movie_card",
+          },
+          {
+            "action": {
+              "destination": "movie_detail_screen",
+              "params": {
+                "movie_id": "208",
+              },
+              "type": "navigation_action",
+            },
+            "movie_id": "208",
+            "poster_url": "https://image.tmdb.org/t/p/w500/poster-208.jpg",
+            "title": {
+              "text_content": "Movie 208",
+              "type": "text",
+            },
+            "type": "movie_card",
+          },
+          {
+            "action": {
+              "destination": "movie_detail_screen",
+              "params": {
+                "movie_id": "209",
+              },
+              "type": "navigation_action",
+            },
+            "movie_id": "209",
+            "poster_url": "https://image.tmdb.org/t/p/w500/poster-209.jpg",
+            "title": {
+              "text_content": "Movie 209",
+              "type": "text",
+            },
+            "type": "movie_card",
+          },
+        ],
+        "type": "movie_carousel",
+      },
+    ],
+    "type": "column",
+  },
+  "screen_id": "home",
+  "toolbar": {
+    "actions": [
+      {
+        "action": {
+          "destination": "search_screen",
+          "type": "navigation_action",
+        },
+        "icon_name": "search",
+        "type": "icon_button",
+      },
+    ],
+    "title": {
+      "alignment": "start",
+      "style": "headline",
+      "text_content": "CineStream",
+      "type": "toolbar_title",
+    },
+    "type": "app_bar",
+  },
+  "type": "screen",
+}
+`;

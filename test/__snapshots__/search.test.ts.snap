@@ -1,0 +1,74 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`GET /api/search > returns the search results screen 1`] = `
+{
+  "body": {
+    "items": [
+      {
+        "action": {
+          "destination": "movie_detail_screen",
+          "params": {
+            "movie_id": "400",
+          },
+          "type": "navigation_action",
+        },
+        "movie_id": "400",
+        "poster_url": "https://image.tmdb.org/t/p/w500/poster-400.jpg",
+        "subtitle": {
+          "text_content": "⭐ 7.3 | 📅 2026-01-15",
+          "type": "text",
+        },
+        "title": {
+          "text_content": "Movie 400",
+          "type": "text",
+        },
+        "type": "movie_list_item",
+      },
+      {
+        "action": {
+          "destination": "movie_detail_screen",
+          "params": {
+            "movie_id": "401",
+          },
+          "type": "navigation_action",
+        },
+        "movie_id": "401",
+        "poster_url": "https://via.placeholder.com/100x150?text=No+Image",
+        "subtitle": {
+          "text_content": "⭐ N/A | 📅 Unknown",
+          "type": "text",
+        },
+        "title": {
+          "text_content": "Movie 401",
+          "type": "text",
+        },
+        "type": "movie_list_item",
+      },
+      {
+        "action": {
+          "destination": "movie_detail_screen",
+          "params": {
+            "movie_id": "402",
+          },
+          "type": "navigation_action",
+        },
+        "movie_id": "402",
+        "poster_url": "https://image.tmdb.org/t/p/w500/poster-402.jpg",
+        "subtitle": {
+          "text_content": "⭐ 0.0 | 📅 2026-01-15",
+          "type": "text",
+        },
+        "title": {
+          "text_content": "Named Only",
+          "type": "text",
+        },
+        "type": "movie_list_item",
+      },
+    ],
+    "list_id": "search_results",
+    "type": "vertical_list",
+  },
+  "screen_id": "search_screen",
+  "type": "screen",
+}
+`;
