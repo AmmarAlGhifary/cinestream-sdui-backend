@@ -103,6 +103,8 @@ To sign in with a TMDB account:
 3. Call `POST /api/auth/session` with the same `request_token`.
 4. Send `Authorization: Bearer <session_id>` with later requests.
 
+`expires_at` is an ISO 8601 UTC time, such as `2026-11-27T08:00:00.000Z`. If TMDB's value can't be read, it is passed through unchanged.
+
 `favorite` sets the state; it doesn't toggle it. `icon_button` is the detail screen's updated toolbar button.
 
 With a session, `/api/movie_detail_screen` shows whether the movie is a favorite. The backend is a stateless proxy: it never stores or logs the session.

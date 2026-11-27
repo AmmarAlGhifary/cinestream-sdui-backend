@@ -86,6 +86,16 @@ describe('credentials never reach the logs', () => {
         expect(JSON.stringify(responses.map((r) => r.body))).not.toContain(SESSION);
     });
 
+    it('when a failed sign-in cannot delete its session', async () => {
+        const failure = tmdbError(500, 11, echo);
+        fakeTmdb.respond({ ...routes, '/account': failure, '/authentication/session': failure });
+
+        await invoke(sessionHandler, {}, '/', { method: 'POST', body: { request_token: TOKEN } });
+
+        expect(lines.join('\n')).toContain('Could not delete the session');
+        expectNoSecrets();
+    });
+
     it('when an error message carries them', async () => {
         fakeTmdb.fail(new Error(
             `failed: https://api.themoviedb.org/3/account?api_key=test-key&session_id=${SESSION}` +

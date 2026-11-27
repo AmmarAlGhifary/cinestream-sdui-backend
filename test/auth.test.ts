@@ -32,11 +32,37 @@ describe('POST /api/auth/request_token', () => {
         expect(status).toBe(200);
         expect(body).toStrictEqual({
             request_token: TOKEN,
-            expires_at: '2026-11-27 15:00:00 UTC',
+            expires_at: '2026-11-27T15:00:00.000Z',
             approve_url: `https://www.themoviedb.org/authenticate/${TOKEN}?redirect_to=cinestream%3A%2F%2Fauth%2Ftmdb`,
         });
         expect(headers).toStrictEqual(NO_STORE);
         expect(fakeTmdb.calls()).toStrictEqual([{ method: 'GET', path: '/authentication/token/new', query: {} }]);
+    });
+
+    it.each([
+        ['another format', 'Fri, 27 Nov 2026 15:00:00 GMT'],
+        ['already ISO 8601', '2026-11-27T15:00:00Z'],
+        ['a date that does not exist', '2026-02-30 15:00:00 UTC'],
+        ['an hour that does not exist', '2026-11-27 24:00:00 UTC'],
+        ['a month that does not exist', '2026-13-01 15:00:00 UTC'],
+        ['another time zone', '2026-11-27 15:00:00 PST'],
+    ])('passes an expires_at in %s through with a warning', async (_label, expiresAt) => {
+        const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+        fakeTmdb.respond({ '/authentication/token/new': { ...requestToken, expires_at: expiresAt } });
+
+        const { status, body } = await start();
+
+        expect(status).toBe(200);
+        expect(body.expires_at).toBe(expiresAt);
+        expect(warn).toHaveBeenCalledWith(expect.stringContaining('unreadable expires_at'));
+    });
+
+    it('does not warn about a readable expires_at', async () => {
+        const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+        await start();
+
+        expect(warn).not.toHaveBeenCalled();
     });
 
     it('takes the redirect URL from AUTH_REDIRECT_URL', async () => {
@@ -137,6 +163,9 @@ describe('POST /api/auth/session', () => {
         [401, 33],
         [401, 35],
         [422, 41],
+        [401, 31],
+        [401, 32],
+        [403, 45],
     ])('returns SIGN_IN_FAILED for TMDB %i with status_code %i', async (status, statusCode) => {
         fakeTmdb.respond({ '/authentication/session/new': tmdbError(status, statusCode) });
 
@@ -156,6 +185,57 @@ describe('POST /api/auth/session', () => {
         fakeTmdb.respond(tmdbRoutes);
 
         expectError(await signIn({ request_token: TOKEN }), code);
+    });
+});
+
+describe('POST /api/auth/session when the account lookup fails', () => {
+    const signIn = () => invoke(sessionHandler, {}, '/', { method: 'POST', body: { request_token: TOKEN } });
+
+    const created = { '/authentication/session/new': newSession };
+    const deletion = { method: 'DELETE', path: '/authentication/session', query: {}, body: { session_id: SESSION } };
+
+    const failures: [string, unknown, ErrorCode][] = [
+        ['a disabled account', tmdbError(401, 31), 'SIGN_IN_FAILED'],
+        ['an unverified account', tmdbError(401, 32), 'SIGN_IN_FAILED'],
+        ['a suspended account', tmdbError(403, 45), 'SIGN_IN_FAILED'],
+        ['a rejected session', tmdbError(401, 3), 'SESSION_EXPIRED'],
+        ['an invalid API key', tmdbError(401, 7), 'SERVICE_MISCONFIGURED'],
+        ['an unexplained 403', tmdbError(403), 'SERVICE_MISCONFIGURED'],
+        ['a server error', tmdbError(500, 11), 'UPSTREAM_ERROR'],
+        ['rate limiting', tmdbError(429, 25), 'RATE_LIMITED'],
+        ['a malformed account', { id: 'x' }, 'UPSTREAM_ERROR'],
+    ];
+
+    it.each(failures)('deletes the new session after %s', async (_label, accountRoute, code) => {
+        fakeTmdb.respond({ ...created, '/account': accountRoute, '/authentication/session': { success: true } });
+
+        expectError(await signIn(), code);
+        expect(fakeTmdb.calls().slice(2)).toStrictEqual([deletion]);
+    });
+
+    it.each(failures)('keeps the error for %s when the delete fails too', async (_label, accountRoute, code) => {
+        const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+        fakeTmdb.respond({ ...created, '/account': accountRoute, '/authentication/session': tmdbError(500, 11) });
+
+        expectError(await signIn(), code);
+        expect(fakeTmdb.calls()).toHaveLength(3);
+        expect(warn).toHaveBeenCalledWith(expect.stringContaining('Could not delete the session'));
+    });
+
+    it('keeps the session when the sign-in succeeds', async () => {
+        fakeTmdb.respond({ ...created, '/account': account });
+
+        await signIn();
+
+        expect(fakeTmdb.calls().map(({ method }) => method)).toEqual(['POST', 'GET']);
+    });
+
+    it('has nothing to delete when no session was created', async () => {
+        fakeTmdb.respond({ '/authentication/session/new': tmdbError(401, 17) });
+
+        await signIn();
+
+        expect(fakeTmdb.calls()).toHaveLength(1);
     });
 });
 
@@ -195,6 +275,10 @@ describe('DELETE /api/auth/session', () => {
         ['status_code 3', 401, 3, 'SESSION_EXPIRED'],
         ['status_code 17', 401, 17, 'SESSION_EXPIRED'],
         ['status_code 37', 404, 37, 'SESSION_EXPIRED'],
+        ['a disabled account', 401, 31, 'SESSION_EXPIRED'],
+        ['an unverified account', 401, 32, 'SESSION_EXPIRED'],
+        ['a suspended account', 403, 45, 'SESSION_EXPIRED'],
+        ['an unexplained 403', 403, undefined, 'SERVICE_MISCONFIGURED'],
         ['a 404 with another code', 404, 6, 'SESSION_EXPIRED'],
         ['an invalid API key', 401, 7, 'SERVICE_MISCONFIGURED'],
         ['a server error', 500, 11, 'UPSTREAM_ERROR'],

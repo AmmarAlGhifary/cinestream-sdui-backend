@@ -105,15 +105,19 @@ Signed-in requests send `Authorization: Bearer <session_id>`. The backend stores
 
 A request for TMDB's user data can be rejected for the user's session or for our API key. TMDB's `status_code` tells them apart:
 
-| TMDB `status_code`                            | On                                          | Result                  |
-| :-------------------------------------------- | :------------------------------------------ | :---------------------- |
-| 3, 14, 17, 37                                 | A request made with a session               | `SESSION_EXPIRED`       |
-| Any code, with HTTP 404                       | Deleting a session                          | `SESSION_EXPIRED`       |
-| 3, 14, 17, 33, 35, 41                         | Exchanging a request token                  | `SIGN_IN_FAILED`        |
-| 7, 10, or any other code with HTTP 401 or 403 | Any request                                 | `SERVICE_MISCONFIGURED` |
-| Any other code with HTTP 404                  | A movie's account state or setting favorite | `MOVIE_NOT_FOUND`       |
+| TMDB `status_code`                                     | On                                          | Result                  |
+| :----------------------------------------------------- | :------------------------------------------ | :---------------------- |
+| 31, 32, 45 (account disabled, unverified or suspended) | The account lookup that completes a sign-in | `SIGN_IN_FAILED`        |
+| 31, 32, 45                                             | Any other request made with a session       | `SESSION_EXPIRED`       |
+| 3, 14, 17, 37                                          | A request made with a session               | `SESSION_EXPIRED`       |
+| Any code, with HTTP 404                                | Deleting a session                          | `SESSION_EXPIRED`       |
+| 3, 14, 17, 31, 32, 33, 35, 41, 45                      | Exchanging a request token                  | `SIGN_IN_FAILED`        |
+| 7, 10, or any other code with HTTP 401 or 403          | Any request                                 | `SERVICE_MISCONFIGURED` |
+| Any other code with HTTP 404                           | A movie's account state or setting favorite | `MOVIE_NOT_FOUND`       |
 
 Rows are checked from the top.
+
+If the account lookup that completes a sign-in fails for any reason, the backend tries to delete the new TMDB session before returning the error.
 
 ### The detail screen
 

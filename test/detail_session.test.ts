@@ -75,6 +75,9 @@ describe('GET /api/movie_detail_screen with a session', () => {
         [401, 14],
         [401, 17],
         [404, 37],
+        [401, 31],
+        [401, 32],
+        [403, 45],
     ])('renders signed out when TMDB answers %i with status_code %i', async (status, statusCode) => {
         fakeTmdb.respond({ ...movieRoutes, [STATES]: tmdbError(status, statusCode) });
 

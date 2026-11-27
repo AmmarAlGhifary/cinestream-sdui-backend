@@ -14,6 +14,9 @@ import type {
 } from './dtos';
 import { endpoint, forMovie } from './repository';
 
+/** TMDB `status_code`s for an account that is disabled (31), unverified (32) or suspended (45). */
+const USER_BLOCKED = [31, 32, 45];
+
 /**
  * TMDB `status_code`s that reject the user's session: 3 and 14 authentication
  * failed, 17 session denied, 37 session not found. A rejected API key (7, or 10
@@ -25,7 +28,7 @@ const SESSION_REJECTED = [3, 14, 17, 37];
  * TMDB `status_code`s that reject a request token: the codes above that apply,
  * 33 invalid or expired request token, 35 invalid token, 41 token not approved.
  */
-const TOKEN_REJECTED = [3, 14, 17, 33, 35, 41];
+const TOKEN_REJECTED = [3, 14, 17, 33, 35, 41, ...USER_BLOCKED];
 
 /** Anything longer or with other characters cannot be a TMDB session id. */
 const SESSION_ID = /^[A-Za-z0-9._-]{1,256}$/;
@@ -46,13 +49,22 @@ async function rejecting<T>(statusCodes: number[], code: ErrorCode, request: () 
     }
 }
 
-/** Run a request made with the user's session. */
-async function asUser<T>(sessionId: string, request: (query: string) => Promise<T>): Promise<T> {
+/**
+ * Run a request made with the user's session. `blockedCode` is the error for an
+ * account TMDB will not serve.
+ */
+async function asUser<T>(
+    sessionId: string,
+    request: (query: string) => Promise<T>,
+    blockedCode: ErrorCode = "SESSION_EXPIRED",
+): Promise<T> {
     if (!SESSION_ID.test(sessionId)) {
         throw new AppError("SESSION_EXPIRED", { detail: "The session id is malformed" });
     }
     const query = `&session_id=${encodeURIComponent(sessionId)}`;
-    return rejecting(SESSION_REJECTED, "SESSION_EXPIRED", () => request(query));
+    return rejecting(USER_BLOCKED, blockedCode, () =>
+        rejecting(SESSION_REJECTED, "SESSION_EXPIRED", () => request(query)),
+    );
 }
 
 function unexpected(what: string): AppError {
@@ -98,9 +110,12 @@ export async function deleteSession(sessionId: string): Promise<void> {
     });
 }
 
-export async function getAccount(sessionId: string): Promise<TmdbAccount> {
-    const { data } = await asUser(sessionId, (session) =>
-        tmdbGet<TmdbAccount>(`${endpoint('/account')}${session}`),
+/** @param signingIn set for the lookup that completes a sign-in. */
+export async function getAccount(sessionId: string, { signingIn = false } = {}): Promise<TmdbAccount> {
+    const { data } = await asUser(
+        sessionId,
+        (session) => tmdbGet<TmdbAccount>(`${endpoint('/account')}${session}`),
+        signingIn ? "SIGN_IN_FAILED" : "SESSION_EXPIRED",
     );
     if (typeof data?.id !== "number" || typeof data.username !== "string") {
         throw unexpected("account");
