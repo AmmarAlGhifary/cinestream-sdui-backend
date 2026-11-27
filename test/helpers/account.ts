@@ -13,8 +13,11 @@ export const newSession = { success: true, session_id: SESSION };
 /** Set with `vi.stubEnv('AUTH_SIGNING_SECRET', SIGNING_KEY)` where sign-in runs. */
 export const SIGNING_KEY = 'test-signing-secret';
 
-/** HMAC-SHA256 of `TOKEN` with `SIGNING_KEY`, computed with openssl rather than the code under test. */
-export const SIGN_IN_SECRET = 'C5d2oOJKeJtljqCaeUZpnyJdgV9z6WR9_3MZzwAo0e8';
+/**
+ * HMAC-SHA256 of `TOKEN` with `SIGNING_KEY`, computed with openssl rather than the code under test.
+ * Test-only value derived from fake data, not a real secret.
+ */
+export const SIGN_IN_SECRET = 'C5d2oOJKeJtljqCaeUZpnyJdgV9z6WR9_3MZzwAo0e8'; // ggignore
 
 /** A complete body for `POST /api/auth/session`. */
 export const SIGN_IN_BODY = { request_token: TOKEN, sign_in_secret: SIGN_IN_SECRET };
