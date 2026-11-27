@@ -2,14 +2,16 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { isMaintenanceMode } from '../config/maintenance';
 import { AppError, ERROR_CATALOG } from '../errors/appError';
 import { logger } from '../logging/logger';
-import { redactApiKey } from '../logging/redact';
+import { redactSecrets } from '../logging/redact';
 import { logRequest } from './logRequest';
-import { ALLOWED_METHODS, sendError } from './sendError';
+import { DEFAULT_METHODS, sendError } from './sendError';
 import { toAppError } from './toAppError';
 
 interface HandlerOptions {
     /** Route name used in request logs. */
     route: string;
+    /** Accepted request methods; anything else gets 405. Defaults to GET and HEAD. */
+    methods?: readonly string[];
     /** Keep answering while maintenance mode is on. */
     availableDuringMaintenance?: boolean;
 }
@@ -23,13 +25,13 @@ function logFailure(route: string, error: AppError) {
         code: error.code,
         status,
         detail: error.message,
-        cause: redactApiKey(String(cause.message ?? cause)),
+        cause: redactSecrets(String(cause.message ?? cause)),
     };
 
     if (status < 500) {
         logger.warn(`${route} failed`, data);
     } else {
-        logger.error(`${route} failed`, { ...data, stack: cause.stack && redactApiKey(cause.stack) });
+        logger.error(`${route} failed`, { ...data, stack: cause.stack && redactSecrets(cause.stack) });
     }
 }
 
@@ -38,13 +40,13 @@ function logFailure(route: string, error: AppError) {
  * and the shared error envelope for anything the handler throws.
  */
 export function withErrorHandling(
-    { route, availableDuringMaintenance = false }: HandlerOptions,
+    { route, methods = DEFAULT_METHODS, availableDuringMaintenance = false }: HandlerOptions,
     handle: Handle,
 ) {
     return async function handler(req: VercelRequest, res: VercelResponse) {
         logRequest(route, req, res);
         try {
-            if (!ALLOWED_METHODS.includes(req.method ?? "")) {
+            if (!methods.includes(req.method ?? "")) {
                 throw new AppError("METHOD_NOT_ALLOWED", { detail: `Method ${req.method} is not allowed` });
             }
             if (!availableDuringMaintenance && isMaintenanceMode()) {
@@ -54,7 +56,7 @@ export function withErrorHandling(
         } catch (error) {
             const failure = toAppError(error);
             logFailure(route, failure);
-            sendError(res, req, failure.code, { retryAfter: failure.retryAfter });
+            sendError(res, req, failure.code, { retryAfter: failure.retryAfter, allow: methods });
         }
     };
 }

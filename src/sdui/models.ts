@@ -16,8 +16,9 @@ export interface ApiAction {
     endpoint: string;
     method: "POST";
     body: {
-        /** Passed through from the query string, so repeated parameters stay an array. */
-        movie_id: string | string[];
+        movie_id: string;
+        /** The state to set, not a toggle. */
+        favorite: boolean;
     };
 }
 
@@ -50,7 +51,7 @@ export interface TextButton {
 
 export interface IconButton {
     type: "icon_button";
-    icon_name: "search" | "favorite_border" | "share";
+    icon_name: "search" | "favorite" | "favorite_border" | "share";
     action: Action;
 }
 

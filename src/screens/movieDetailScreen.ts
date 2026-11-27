@@ -1,6 +1,5 @@
 import type { TmdbMovie, TmdbMovieDetail } from '../data/tmdb/dtos';
 import {
-    apiPost,
     appBar,
     column,
     featuredHeroDetail,
@@ -15,15 +14,17 @@ import {
     textButton,
 } from '../sdui/builders';
 import type { Screen } from '../sdui/models';
-import { APP_TITLE, backdropUrl, toMovieCard } from './shared';
+import { APP_TITLE, backdropUrl, favoriteButton, toMovieCard } from './shared';
 
 /**
  * @param movieId the `movie_id` query value, which is echoed into actions.
+ * @param isFavorite whether the signed-in user saved this movie; false when signed out.
  */
 export function buildMovieDetailScreen(
-    movieId: string | string[],
+    movieId: string,
     movie: TmdbMovieDetail,
     similar: TmdbMovie[],
+    isFavorite: boolean,
 ): Screen {
     return screen(
         "movie_detail_screen",
@@ -41,13 +42,13 @@ export function buildMovieDetailScreen(
                 "Similar Movies",
                 textButton(
                     "See All",
-                    navigate("movie_list_screen", { list_type: "similar", movie_id: movieId.toString() }),
+                    navigate("movie_list_screen", { list_type: "similar", movie_id: movieId }),
                 ),
             ),
             movieCarousel("similar_carousel", similar.map(toMovieCard)),
         ]),
         appBar(APP_TITLE, [
-            iconButton("favorite_border", apiPost("/api/favorite", { movie_id: movieId })),
+            favoriteButton(movieId, isFavorite),
             iconButton("share", share(`Check out ${movie.title} on CineStream!`)),
         ]),
     );

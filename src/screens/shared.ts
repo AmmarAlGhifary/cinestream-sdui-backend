@@ -1,7 +1,7 @@
 import { TMDB_IMAGE_BASE_URL, TMDB_IMAGE_SIZES } from '../config/tmdb';
 import type { TmdbMovie } from '../data/tmdb/dtos';
-import { movieCard } from '../sdui/builders';
-import type { MovieCard } from '../sdui/models';
+import { apiPost, iconButton, movieCard } from '../sdui/builders';
+import type { IconButton, MovieCard } from '../sdui/models';
 
 export const APP_TITLE = "CineStream";
 
@@ -20,4 +20,12 @@ export function displayTitle(movie: TmdbMovie): string {
 
 export function toMovieCard(movie: TmdbMovie): MovieCard {
     return movieCard(movie.id.toString(), posterUrl(movie.poster_path), displayTitle(movie));
+}
+
+/** The toolbar heart. Its action sets the opposite of the current state. */
+export function favoriteButton(movieId: string, isFavorite: boolean): IconButton {
+    return iconButton(
+        isFavorite ? "favorite" : "favorite_border",
+        apiPost("/api/favorite", { movie_id: movieId, favorite: !isFavorite }),
+    );
 }
