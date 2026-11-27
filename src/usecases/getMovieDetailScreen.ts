@@ -6,7 +6,7 @@ import type { Screen } from '../sdui/models';
 
 const SIMILAR_LIMIT = 10;
 
-export async function getMovieDetailScreen(movieId: string | string[]): Promise<Screen> {
+export async function getMovieDetailScreen(movieId: string): Promise<Screen> {
     logger.info(`Fetching details for movie: ${movieId}`);
 
     const movie = await getMovie(movieId);
