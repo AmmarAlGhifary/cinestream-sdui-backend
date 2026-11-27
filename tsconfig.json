@@ -9,7 +9,8 @@
     "forceConsistentCasingInFileNames": true
   },
   "include": [
-    "api/**/*"
+    "api/**/*",
+    "src/**/*"
   ],
   "exclude": [
     "node_modules"

@@ -1,54 +1,13 @@
-import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { logger, tmdbGet, logRequest, logMissingImages } from './logger';
+import { withErrorHandling } from '../src/http/withErrorHandling';
+import { getSearchScreen } from '../src/usecases/getSearchScreen';
 
-const TMDB_API_KEY = "fa2c849fca1204cdc46abea78adbbb86";
-const BASE_URL = "https://api.themoviedb.org/3";
-
-export default async function handler(req: VercelRequest, res: VercelResponse) {
-    logRequest('/api/search', req, res);
-    try {
-        const query = req.query.query;
-
-        if (!query) {
-            return res.status(200).json({
-                type: "screen",
-                screen_id: "search_screen",
-                body: { type: "column", children: [] }
-            });
-        }
-
-        const response = await tmdbGet(`${BASE_URL}/search/movie?query=${encodeURIComponent(query as string)}&api_key=${TMDB_API_KEY}`);
-        const movies = response.data.results;
-
-        logMissingImages(`search "${query}"`, movies);
-
-        const listItems = movies.map((movie: any) => ({
-            type: "movie_list_item",
-            movie_id: movie.id.toString(),
-            poster_url: movie.poster_path ? `https://image.tmdb.org/t/p/w500${movie.poster_path}` : "https://via.placeholder.com/100x150?text=No+Image",
-            title: { type: "text", text_content: movie.title || movie.name },
-            subtitle: { type: "text", text_content: `⭐ ${movie.vote_average?.toFixed(1) || "N/A"} | 📅 ${movie.release_date || "Unknown"}` },
-            action: {
-                type: "navigation_action",
-                destination: "movie_detail_screen",
-                params: { movie_id: movie.id.toString() }
-            }
-        }));
-
-        const sduiResponse = {
-            type: "screen",
-            screen_id: "search_screen",
-            body: {
-                type: "vertical_list",
-                list_id: "search_results",
-                items: listItems
-            }
-        };
-
-        logger.info('Successfully generated Search blueprint', { query, items: listItems.length });
-        res.status(200).json(sduiResponse);
-    } catch (error: any) {
-        logger.error("TMDB Search Error: ", { message: error.message, stack: error.stack });
-        res.status(500).json({ error: "Failed to generate Search blueprint" });
-    }
-}
+export default withErrorHandling(
+    {
+        route: '/api/search',
+        errorLog: 'TMDB Search Error: ',
+        errorMessage: 'Failed to generate Search blueprint',
+    },
+    async (req, res) => {
+        res.status(200).json(await getSearchScreen(req.query.query));
+    },
+);
