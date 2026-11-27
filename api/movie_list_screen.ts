@@ -1,3 +1,4 @@
+import { parseMovieId } from '../src/http/params';
 import { withErrorHandling } from '../src/http/withErrorHandling';
 import { logger } from '../src/logging/logger';
 import { getMovieListScreen, isListType } from '../src/usecases/getMovieListScreen';
@@ -16,6 +17,16 @@ export default withErrorHandling(
             return res.status(400).json({ error: "Invalid list type" });
         }
 
-        res.status(200).json(await getMovieListScreen(listType, req.query.movie_id));
+        // Only the "similar" list reads movie_id; the other lists ignore it.
+        let movieId: string | undefined;
+        if (listType === "similar") {
+            const param = parseMovieId(req.query.movie_id);
+            if (!param.ok) {
+                return res.status(400).json({ error: param.error });
+            }
+            movieId = param.movieId;
+        }
+
+        res.status(200).json(await getMovieListScreen(listType, movieId));
     },
 );

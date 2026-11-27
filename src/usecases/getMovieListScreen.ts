@@ -9,24 +9,31 @@ export type ListType = "trending" | "upcoming" | "similar";
 
 interface ListSource {
     pageTitle: string;
-    fetch: (movieId: string | string[] | undefined) => Promise<TmdbMovie[]>;
+    fetch: (movieId: string | undefined) => Promise<TmdbMovie[]>;
 }
 
 const LIST_SOURCES: Record<ListType, ListSource> = {
     trending: { pageTitle: "Trending Movies", fetch: () => getTrending() },
     upcoming: { pageTitle: "Upcoming Movies", fetch: () => getUpcoming() },
-    similar: { pageTitle: "Similar Movies", fetch: (movieId) => getSimilar(movieId) },
+    similar: { pageTitle: "Similar Movies", fetch: fetchSimilar },
 };
+
+async function fetchSimilar(movieId: string | undefined): Promise<TmdbMovie[]> {
+    if (movieId === undefined) {
+        throw new Error('The "similar" list needs a movieId');
+    }
+    return getSimilar(movieId);
+}
 
 export function isListType(value: unknown): value is ListType {
     // Own keys only, so values such as "toString" are rejected.
     return typeof value === "string" && Object.hasOwn(LIST_SOURCES, value);
 }
 
-/** `movieId` is only used by the "similar" list and is not validated. */
+/** `movieId` is required by the "similar" list, already validated, and unused by the others. */
 export async function getMovieListScreen(
     listType: ListType,
-    movieId: string | string[] | undefined,
+    movieId?: string,
 ): Promise<Screen> {
     const { pageTitle, fetch } = LIST_SOURCES[listType];
     const movies = await fetch(movieId);
