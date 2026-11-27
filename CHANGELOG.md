@@ -29,6 +29,10 @@ body root type the Android client does not support yet) is a major version.
   (all were 500), and an empty home feed is 503.
 - A search `query` that is repeated or longer than 200 characters returns 400.
 
+### Security
+
+- Repository files are no longer served as static files.
+
 ## [1.0.0] - 2026-11-27
 
 First tagged release of the Backend-for-Frontend that turns TMDB data into SDUI screens for the
