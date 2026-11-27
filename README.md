@@ -155,3 +155,15 @@ vercel --prod
 ## 👤 Author
 
 - **Ammar Al Ghifary** - [GitHub](https://github.com/AmmarAlGhifary)
+---
+
+## Testing & CI
+
+```bash
+npm ci               # install the locked dependencies
+npm run typecheck    # type-check api/
+npm test             # run the tests (no network or TMDB key needed)
+npx vitest run -u    # update snapshots after an intended JSON change
+```
+
+GitHub Actions runs `npm ci`, `npm run typecheck` and `npm test` in the `build` job on pull requests into `main` and on pushes to `main`.

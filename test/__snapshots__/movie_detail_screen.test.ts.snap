@@ -1,0 +1,264 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`GET /api/movie_detail_screen > returns the detail screen 1`] = `
+{
+  "body": {
+    "children": [
+      {
+        "description1": {
+          "text_content": "⭐ 8.5/10",
+          "type": "text",
+        },
+        "description2": {
+          "text_content": "2026-01-15",
+          "type": "text",
+        },
+        "description3": {
+          "text_content": "118 minutes",
+          "type": "text",
+        },
+        "image_url": "https://image.tmdb.org/t/p/w780/backdrop-42.jpg",
+        "title": {
+          "title": {
+            "text_content": "The Answer",
+            "type": "text",
+          },
+          "type": "section_header",
+        },
+        "type": "featured_hero_detail",
+      },
+      {
+        "title": {
+          "text_content": "Overview",
+          "type": "text",
+        },
+        "type": "section_header_detail",
+      },
+      {
+        "text_content": "Overview of movie 42.",
+        "type": "text",
+      },
+      {
+        "action_button": {
+          "action": {
+            "destination": "movie_list_screen",
+            "params": {
+              "list_type": "similar",
+              "movie_id": "42",
+            },
+            "type": "navigation_action",
+          },
+          "text": "See All",
+          "type": "text_button",
+        },
+        "title": {
+          "text_content": "Similar Movies",
+          "type": "text",
+        },
+        "type": "section_header",
+      },
+      {
+        "carousel_id": "similar_carousel",
+        "item_type": "movie_card",
+        "items": [
+          {
+            "action": {
+              "destination": "movie_detail_screen",
+              "params": {
+                "movie_id": "300",
+              },
+              "type": "navigation_action",
+            },
+            "movie_id": "300",
+            "poster_url": "https://image.tmdb.org/t/p/w500/poster-300.jpg",
+            "title": {
+              "text_content": "Movie 300",
+              "type": "text",
+            },
+            "type": "movie_card",
+          },
+          {
+            "action": {
+              "destination": "movie_detail_screen",
+              "params": {
+                "movie_id": "301",
+              },
+              "type": "navigation_action",
+            },
+            "movie_id": "301",
+            "poster_url": "https://image.tmdb.org/t/p/w500/poster-301.jpg",
+            "title": {
+              "text_content": "Movie 301",
+              "type": "text",
+            },
+            "type": "movie_card",
+          },
+          {
+            "action": {
+              "destination": "movie_detail_screen",
+              "params": {
+                "movie_id": "302",
+              },
+              "type": "navigation_action",
+            },
+            "movie_id": "302",
+            "poster_url": "https://image.tmdb.org/t/p/w500/poster-302.jpg",
+            "title": {
+              "text_content": "Movie 302",
+              "type": "text",
+            },
+            "type": "movie_card",
+          },
+          {
+            "action": {
+              "destination": "movie_detail_screen",
+              "params": {
+                "movie_id": "303",
+              },
+              "type": "navigation_action",
+            },
+            "movie_id": "303",
+            "poster_url": "https://image.tmdb.org/t/p/w500/poster-303.jpg",
+            "title": {
+              "text_content": "Movie 303",
+              "type": "text",
+            },
+            "type": "movie_card",
+          },
+          {
+            "action": {
+              "destination": "movie_detail_screen",
+              "params": {
+                "movie_id": "304",
+              },
+              "type": "navigation_action",
+            },
+            "movie_id": "304",
+            "poster_url": "https://image.tmdb.org/t/p/w500/poster-304.jpg",
+            "title": {
+              "text_content": "Movie 304",
+              "type": "text",
+            },
+            "type": "movie_card",
+          },
+          {
+            "action": {
+              "destination": "movie_detail_screen",
+              "params": {
+                "movie_id": "305",
+              },
+              "type": "navigation_action",
+            },
+            "movie_id": "305",
+            "poster_url": "https://image.tmdb.org/t/p/w500/poster-305.jpg",
+            "title": {
+              "text_content": "Movie 305",
+              "type": "text",
+            },
+            "type": "movie_card",
+          },
+          {
+            "action": {
+              "destination": "movie_detail_screen",
+              "params": {
+                "movie_id": "306",
+              },
+              "type": "navigation_action",
+            },
+            "movie_id": "306",
+            "poster_url": "https://image.tmdb.org/t/p/w500/poster-306.jpg",
+            "title": {
+              "text_content": "Movie 306",
+              "type": "text",
+            },
+            "type": "movie_card",
+          },
+          {
+            "action": {
+              "destination": "movie_detail_screen",
+              "params": {
+                "movie_id": "307",
+              },
+              "type": "navigation_action",
+            },
+            "movie_id": "307",
+            "poster_url": "https://image.tmdb.org/t/p/w500/poster-307.jpg",
+            "title": {
+              "text_content": "Movie 307",
+              "type": "text",
+            },
+            "type": "movie_card",
+          },
+          {
+            "action": {
+              "destination": "movie_detail_screen",
+              "params": {
+                "movie_id": "308",
+              },
+              "type": "navigation_action",
+            },
+            "movie_id": "308",
+            "poster_url": "https://image.tmdb.org/t/p/w500/poster-308.jpg",
+            "title": {
+              "text_content": "Movie 308",
+              "type": "text",
+            },
+            "type": "movie_card",
+          },
+          {
+            "action": {
+              "destination": "movie_detail_screen",
+              "params": {
+                "movie_id": "309",
+              },
+              "type": "navigation_action",
+            },
+            "movie_id": "309",
+            "poster_url": "https://image.tmdb.org/t/p/w500/poster-309.jpg",
+            "title": {
+              "text_content": "Movie 309",
+              "type": "text",
+            },
+            "type": "movie_card",
+          },
+        ],
+        "type": "movie_carousel",
+      },
+    ],
+    "type": "column",
+  },
+  "screen_id": "movie_detail_screen",
+  "toolbar": {
+    "actions": [
+      {
+        "action": {
+          "body": {
+            "movie_id": "42",
+          },
+          "endpoint": "/api/favorite",
+          "method": "POST",
+          "type": "api_action",
+        },
+        "icon_name": "favorite_border",
+        "type": "icon_button",
+      },
+      {
+        "action": {
+          "content": "Check out The Answer on CineStream!",
+          "type": "share_action",
+        },
+        "icon_name": "share",
+        "type": "icon_button",
+      },
+    ],
+    "title": {
+      "alignment": "start",
+      "style": "headline",
+      "text_content": "CineStream",
+      "type": "toolbar_title",
+    },
+    "type": "app_bar",
+  },
+  "type": "screen",
+}
+`;
