@@ -9,7 +9,7 @@ export default withErrorHandling(
         res.status(200).json({
             status: "ok",
             message: "CineStream SDUI BFF is running!",
-            version: "1.0.0",
+            version: "1.1.0",
             environment: process.env.VERCEL_ENV || "development",
             maintenance: isMaintenanceMode(),
             timestamp: new Date().toISOString(),

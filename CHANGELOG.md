@@ -9,6 +9,8 @@ body root type the Android client does not support yet) is a major version.
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-11-27
+
 ### Added
 
 - Error codes with a user-readable `title` and `message`, a `retryable` flag and, when Vercel provides
@@ -61,5 +63,6 @@ CineStream Android client.
 - npm audit: no vulnerabilities in runtime dependencies (axios 1.21.1). Three dev-only findings remain
   through `@vercel/node`.
 
-[Unreleased]: https://github.com/AmmarAlGhifary/cinestream-sdui-backend/compare/v1.0.0...develop
+[Unreleased]: https://github.com/AmmarAlGhifary/cinestream-sdui-backend/compare/v1.1.0...develop
+[1.1.0]: https://github.com/AmmarAlGhifary/cinestream-sdui-backend/releases/tag/v1.1.0
 [1.0.0]: https://github.com/AmmarAlGhifary/cinestream-sdui-backend/releases/tag/v1.0.0
